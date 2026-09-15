@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:elaundry_app/shared/widgets/custom_icons.dart';
 import '../../core/themes/theme.dart';
-import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _nameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -129,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(height: 8),
 
                                   Text(
-                                    "Let's get you Login",
+                                    'Register to eLaundry',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.displayLarge
                                         ?.copyWith(
@@ -141,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 24),
                                   Text(
-                                    'Good to see you! Let’s get your laundry sorted',
+                                    'Your laundry, scheduled and managed',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: Colors.white.withValues(
@@ -195,6 +199,45 @@ class _LoginScreenState extends State<LoginScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
+                                      // FULL NAME FIELD
+                                      Text(
+                                        'Full Name',
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(
+                                              color: AppColors.secondary[900],
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextFormField(
+                                        controller: _nameController,
+                                        keyboardType: TextInputType.name,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.name,
+                                        ],
+                                        style: theme.textTheme.bodyMedium,
+                                        decoration: InputDecoration(
+                                          hintText: 'Juan Dela Cruz',
+                                          hintStyle: TextStyle(
+                                            color: AppColors.secondary[400],
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.account_circle_outlined,
+                                            size: 20,
+                                            color: AppColors.secondary[500],
+                                          ),
+                                        ),
+                                        validator: (value) {
+                                          if (value == null ||
+                                              value.trim().isEmpty) {
+                                            return 'Please enter your full name';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+
+                                      const SizedBox(height: 18),
+
                                       // EMAIL FIELD
                                       Text(
                                         'Email Address',
@@ -237,6 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           return null;
                                         },
                                       ),
+
                                       const SizedBox(height: 18),
 
                                       // PASSWORD FIELD
@@ -296,17 +340,63 @@ class _LoginScreenState extends State<LoginScreen> {
                                         },
                                       ),
 
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 18),
 
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: Text(
-                                          'Forgot password?',
-                                          style: theme.textTheme.labelMedium
-                                              ?.copyWith(
-                                                color: AppColors.accent,
-                                              ),
+                                      // CONFIRM PASSWORD FIELD
+                                      Text(
+                                        'Confirm Password',
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(
+                                              color: AppColors.secondary[900],
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextFormField(
+                                        controller: _confirmPasswordController,
+                                        obscureText: _obscureConfirmPassword,
+                                        textInputAction: TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
+                                        onFieldSubmitted: (_) => _submit(),
+                                        style: theme.textTheme.bodyMedium,
+                                        decoration: InputDecoration(
+                                          hintText: '••••••••',
+                                          hintStyle: TextStyle(
+                                            color: AppColors.secondary[400],
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline_rounded,
+                                            size: 20,
+                                            color: AppColors.secondary[500],
+                                          ),
+                                          suffixIcon: IconButton(
+                                            splashRadius: 20,
+                                            onPressed:
+                                                () => setState(
+                                                  () =>
+                                                      _obscurePassword =
+                                                          !_obscurePassword,
+                                                ),
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                      .visibility_off_outlined,
+                                              size: 20,
+                                              color: AppColors.secondary[500],
+                                            ),
+                                          ),
                                         ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter your password';
+                                          }
+                                          if (value.length < 6) {
+                                            return 'Must be at least 6 characters';
+                                          }
+                                          return null;
+                                        },
                                       ),
 
                                       const SizedBox(height: 26),
@@ -322,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                   BorderRadius.circular(10),
                                             ),
                                           ),
-                                          child: const Text('Sign In'),
+                                          child: const Text('Register Account'),
                                         ),
                                       ),
                                       const SizedBox(height: 22),
@@ -340,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               horizontal: 14,
                                             ),
                                             child: Text(
-                                              'Don’t have an account yet?',
+                                              'Already have an account?',
                                               style: theme.textTheme.bodySmall
                                                   ?.copyWith(
                                                     color:
@@ -358,17 +448,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       const SizedBox(height: 22),
 
-                                      // SIGN UP BUTTON
+                                      // SIGN IN BUTTON
                                       OutlinedButton.icon(
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const RegisterScreen(),
-                                            ),
-                                          );
-                                        },
+                                        onPressed: () {},
                                         style: OutlinedButton.styleFrom(
                                           minimumSize: const Size(0, 50),
                                           side: BorderSide(
@@ -384,7 +466,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                           textStyle: theme.textTheme.labelLarge
                                               ?.copyWith(fontSize: 14),
                                         ),
-                                        label: const Text('Create an account'),
+                                        label: const Text(
+                                          'Sign in to your account',
+                                        ),
                                       ),
 
                                       const SizedBox(height: 16),
