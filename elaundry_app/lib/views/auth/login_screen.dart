@@ -3,6 +3,7 @@ import 'package:elaundry_app/shared/widgets/custom_icons.dart';
 import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
 import '../../core/themes/theme.dart';
 import 'register_screen.dart';
+import '../settings/settings_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,18 +48,15 @@ class _LoginScreenState extends State<LoginScreen> {
         // 2. Perform authentication request
         await Future.delayed(const Duration(seconds: 3));
 
-        // 3. Pop the loading screen or push your Home screen
+        // 3. Clear auth stack and navigate directly to SettingsScreen
         if (mounted) {
-          Navigator.of(context).pop(); // Pops the loading screen back to login
-
-          // Or if going to your main home screen, replace the stack instead:
-          // Navigator.of(context).pushAndRemoveUntil(
-          //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-          //   (route) => false,
-          // );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            (route) => false,
+          );
         }
       } catch (error) {
-        // If an error occurs, pop the loading screen back to LoginScreen
+        // If an error occurs, pop only the LoadingScreen back to LoginScreen
         if (mounted) {
           Navigator.of(context).pop();
         }

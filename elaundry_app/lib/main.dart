@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/themes/theme.dart';
 import 'views/auth/login_screen.dart';
+import 'views/settings/settings_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'eLaundry',
       theme: AppTheme.light,
-      home: const LoginScreen(),
+      home: const SettingsScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
