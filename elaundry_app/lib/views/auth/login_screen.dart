@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:elaundry_app/shared/widgets/custom_icons.dart';
+import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
 import '../../core/themes/theme.dart';
 import 'register_screen.dart';
 
@@ -23,20 +24,45 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  // LOADING SCREEN
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          content: const Text(
-            'Signing in to eLaundry...',
-            style: TextStyle(color: Colors.white),
-          ),
+      // 1. Navigate to the full loading screen
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          pageBuilder:
+              (_, __, ___) => const LoadingScreen(
+                title: 'Signing in to eLaundry...',
+                subtitle: 'Getting your laundry basket ready...',
+              ),
+          transitionsBuilder:
+              (_, animation, __, child) =>
+                  FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 250),
         ),
       );
+
+      try {
+        // 2. Perform authentication request
+        await Future.delayed(const Duration(seconds: 3));
+
+        // 3. Pop the loading screen or push your Home screen
+        if (mounted) {
+          Navigator.of(context).pop(); // Pops the loading screen back to login
+
+          // Or if going to your main home screen, replace the stack instead:
+          // Navigator.of(context).pushAndRemoveUntil(
+          //   MaterialPageRoute(builder: (context) => const HomeScreen()),
+          //   (route) => false,
+          // );
+        }
+      } catch (error) {
+        // If an error occurs, pop the loading screen back to LoginScreen
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      }
     }
   }
 

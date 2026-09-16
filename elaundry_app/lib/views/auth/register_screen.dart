@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:elaundry_app/shared/widgets/custom_icons.dart';
+import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
 import '../../core/themes/theme.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -27,20 +29,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  // LOADING SCREEN
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          content: const Text(
-            'Signing in to eLaundry...',
-            style: TextStyle(color: Colors.white),
-          ),
+      // 1. Navigate to the full loading screen
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          pageBuilder:
+              (_, __, ___) => const LoadingScreen(
+                title: 'Creating Your Account...',
+                subtitle:
+                    'Setting up your account and getting your basket ready...',
+              ),
+          transitionsBuilder:
+              (_, animation, __, child) =>
+                  FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 250),
         ),
       );
+
+      try {
+        // 2. Perform authentication / registration request
+        await Future.delayed(const Duration(seconds: 3));
+
+        // 3. Dismiss loading and pop back to LoginScreen
+        if (mounted) {
+          // Pops LoadingScreen and RegisterScreen, landing on LoginScreen
+          Navigator.of(context).popUntil((route) => route.isFirst);
+
+          // Optional: Notify the user on the LoginScreen
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.primary[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              content: const Text(
+                'Account created successfully! Please sign in.',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+      } catch (error) {
+        // If registration fails, pop only the LoadingScreen so the user can fix the form
+        if (mounted) {
+          Navigator.of(context).pop();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              content: Text(
+                'Registration failed: $error',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -450,7 +502,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                       // SIGN IN BUTTON
                                       OutlinedButton.icon(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const LoginScreen(),
+                                            ),
+                                          );
+                                        },
                                         style: OutlinedButton.styleFrom(
                                           minimumSize: const Size(0, 50),
                                           side: BorderSide(
