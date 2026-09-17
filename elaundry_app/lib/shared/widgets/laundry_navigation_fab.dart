@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../core/themes/theme.dart';
+import '../../views/laundry/machine_screen.dart';
+import '../../views/settings/settings_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onMachinesTap;
 
-  const LaundryNavigationFab({super.key, this.onSettingsTap});
+  const LaundryNavigationFab({
+    super.key,
+    this.onSettingsTap,
+    this.onMachinesTap,
+  });
 
   @override
   State<LaundryNavigationFab> createState() => _LaundryNavigationFabState();
@@ -25,7 +33,7 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
       duration: const Duration(milliseconds: 350),
     );
 
-    // 1 full spin + 45 degree turn (1.125 turns total) to settle into the diamond
+    // 1 full spin + 45-degree turn (1.125 turns total) to settle into the diamond
     _containerSpinAnimation = Tween<double>(begin: 0.0, end: 1.125).animate(
       CurvedAnimation(
         parent: _animController,
@@ -79,6 +87,7 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
                     child: _NavigationGridCard(
                       onClose: () => Navigator.of(dialogContext).pop(),
                       onSettingsTap: widget.onSettingsTap,
+                      onMachinesTap: widget.onMachinesTap,
                     ),
                   ),
                 ),
@@ -147,14 +156,53 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
 class _NavigationGridCard extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onMachinesTap;
 
-  const _NavigationGridCard({required this.onClose, this.onSettingsTap});
+  const _NavigationGridCard({
+    required this.onClose,
+    this.onSettingsTap,
+    this.onMachinesTap,
+  });
+
+  void _navigateTo(BuildContext context, Widget screen) {
+    onClose();
+    // Replaces current primary screen so history doesn't cycle infinitely
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => screen,
+        transitionsBuilder:
+            (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final currentRouteName = ModalRoute.of(context)?.settings.name;
+
     final navItems = [
       _NavItemData(icon: Icons.local_mall_rounded, label: 'Orders'),
       _NavItemData(icon: Icons.receipt, label: 'Transaction\nHistory'),
+      _NavItemData(
+        icon: Icons.local_laundry_service_rounded,
+        label: 'Laundry Machine',
+        onTap: () {
+          if (onMachinesTap != null) {
+            onClose();
+            onMachinesTap!();
+          } else {
+            // Avoid pushing if already on the Machines screen
+            if (context.findAncestorWidgetOfExactType<MachinesScreen>() ==
+                null) {
+              _navigateTo(context, const MachinesScreen());
+            } else {
+              onClose();
+            }
+          }
+        },
+      ),
       _NavItemData(icon: Icons.sell_rounded, label: 'Item'),
       _NavItemData(icon: Icons.alarm_rounded, label: 'Shift'),
       _NavItemData(icon: Icons.badge_rounded, label: 'Employee'),
@@ -163,8 +211,18 @@ class _NavigationGridCard extends StatelessWidget {
         icon: Icons.settings_rounded,
         label: 'Settings',
         onTap: () {
-          onClose();
-          onSettingsTap?.call();
+          if (onSettingsTap != null) {
+            onClose();
+            onSettingsTap!();
+          } else {
+            // Avoid pushing if already on the Settings screen
+            if (context.findAncestorWidgetOfExactType<SettingsScreen>() ==
+                null) {
+              _navigateTo(context, const SettingsScreen());
+            } else {
+              onClose();
+            }
+          }
         },
       ),
     ];
@@ -220,8 +278,11 @@ class _NavGridTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        onCloseParent();
-        item.onTap?.call();
+        if (item.onTap != null) {
+          item.onTap!();
+        } else {
+          onCloseParent();
+        }
       },
       borderRadius: BorderRadius.circular(16),
       child: Column(
