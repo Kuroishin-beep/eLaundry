@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/themes/theme.dart';
 import '../../shared/widgets/laundry_navigation_fab.dart';
 import '../auth/login_screen.dart';
+import 'edit_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,6 +14,41 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
+
+  // Stored state for editable values
+  String _email = 'you@example.com';
+  String _accountName = 'Juan Dela Cruz';
+  String _storeName = 'eLaundry Central Branch';
+  String _address = 'Mabalacat Pampanga';
+  String _pin = '1234';
+
+  void _openEditor({
+    required String title,
+    required String label,
+    required String currentValue,
+    required SettingFieldType fieldType,
+    int? maxLength,
+    String? helperText,
+    required Function(String) onSave,
+  }) async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder:
+            (context) => EditSettingsScreen(
+              title: title,
+              label: label,
+              initialValue: currentValue,
+              fieldType: fieldType,
+              maxLength: maxLength,
+              helperText: helperText,
+            ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() => onSave(result));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // General Section
-                _SectionTitle(title: 'General'),
+                const _SectionTitle(title: 'General'),
                 const SizedBox(height: 8),
                 _SettingsCard(
                   children: [
@@ -67,53 +103,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsTile(
                       icon: Icons.mail,
                       title: 'Email Address',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Email Address',
+                            label: 'Email',
+                            currentValue: _email,
+                            fieldType: SettingFieldType.email,
+                            onSave: (val) => _email = val,
+                          ),
                     ),
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.account_circle,
                       title: 'Account Name',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Account Name',
+                            label: 'Full Name',
+                            currentValue: _accountName,
+                            fieldType: SettingFieldType.text,
+                            onSave: (val) => _accountName = val,
+                          ),
                     ),
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.lock,
                       title: 'Password',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Change Password',
+                            label: 'New Password',
+                            currentValue: '',
+                            fieldType: SettingFieldType.password,
+                            helperText: 'Must be at least 6 characters long',
+                            onSave: (val) {},
+                          ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
                 // Store Section
-                _SectionTitle(title: 'Store'),
+                const _SectionTitle(title: 'Store'),
                 const SizedBox(height: 8),
                 _SettingsCard(
                   children: [
                     _SettingsTile(
                       icon: Icons.store_rounded,
                       title: 'Store Name',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Store Name',
+                            label: 'Store / Branch Name',
+                            currentValue: _storeName,
+                            fieldType: SettingFieldType.text,
+                            onSave: (val) => _storeName = val,
+                          ),
                     ),
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.location_on,
                       title: 'Address',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Store Address',
+                            label: 'Physical Address',
+                            currentValue: _address,
+                            fieldType: SettingFieldType.multiline,
+                            onSave: (val) => _address = val,
+                          ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
                 // Security & Session Section
-                _SectionTitle(title: 'Security & Session'),
+                const _SectionTitle(title: 'Security & Session'),
                 const SizedBox(height: 8),
                 _SettingsCard(
                   children: [
                     _SettingsTile(
                       icon: Icons.dialpad_rounded,
                       title: 'Pin',
-                      onTap: () {},
+                      onTap:
+                          () => _openEditor(
+                            title: 'Security PIN',
+                            label: '4-Digit PIN',
+                            currentValue: _pin,
+                            fieldType: SettingFieldType.number,
+                            maxLength: 4,
+                            helperText: 'Only digits allowed (Numpad input)',
+                            onSave: (val) => _pin = val,
+                          ),
                     ),
                     const _CardDivider(),
                     _SettingsTile(
@@ -121,10 +202,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: 'Logout',
                       isDestructive: true,
                       onTap: () {
-                        Navigator.of(context).push(
+                        Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
                             builder: (context) => const LoginScreen(),
                           ),
+                          (route) => false,
                         );
                       },
                     ),

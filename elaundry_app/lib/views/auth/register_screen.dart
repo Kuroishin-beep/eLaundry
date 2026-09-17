@@ -271,7 +271,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         decoration: InputDecoration(
                                           hintText: 'Juan Dela Cruz',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.account_circle_outlined,
@@ -311,7 +311,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         decoration: InputDecoration(
                                           hintText: 'you@example.com',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.alternate_email_rounded,
@@ -356,7 +356,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         decoration: InputDecoration(
                                           hintText: '••••••••',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,
@@ -415,7 +415,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         decoration: InputDecoration(
                                           hintText: '••••••••',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,

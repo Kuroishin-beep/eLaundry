@@ -240,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         decoration: InputDecoration(
                                           hintText: 'you@example.com',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.alternate_email_rounded,
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         decoration: InputDecoration(
                                           hintText: '••••••••',
                                           hintStyle: TextStyle(
-                                            color: AppColors.secondary[400],
+                                            color: AppColors.secondary[300],
                                           ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,
