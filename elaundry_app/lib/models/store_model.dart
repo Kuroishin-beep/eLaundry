@@ -1,5 +1,5 @@
 class StoreModel {
-  final String id; // Matches the owner's userId
+  final String id;
   final String storeName;
   final String address;
   final String pin;
@@ -8,9 +8,9 @@ class StoreModel {
 
   StoreModel({
     required this.id,
-    required this.storeName,
-    required this.address,
-    required this.pin,
+    this.storeName = '',
+    this.address = '',
+    this.pin = '',
     this.notificationsEnabled = true,
     this.updatedAt,
   });
@@ -18,9 +18,9 @@ class StoreModel {
   factory StoreModel.fromMap(Map<String, dynamic> map, String id) {
     return StoreModel(
       id: id,
-      storeName: map['storeName'] ?? 'eLaundry Central Branch',
-      address: map['address'] ?? 'Mabalacat Pampanga',
-      pin: map['pin'] ?? '1234',
+      storeName: map['storeName'] ?? '',
+      address: map['address'] ?? '',
+      pin: map['pin'] ?? '',
       notificationsEnabled: map['notificationsEnabled'] ?? true,
       updatedAt:
           map['updatedAt'] != null
@@ -37,22 +37,5 @@ class StoreModel {
       'notificationsEnabled': notificationsEnabled,
       'updatedAt': DateTime.now(),
     };
-  }
-
-  StoreModel copyWith({
-    String? storeName,
-    String? address,
-    String? pin,
-    bool? notificationsEnabled,
-    DateTime? updatedAt,
-  }) {
-    return StoreModel(
-      id: id,
-      storeName: storeName ?? this.storeName,
-      address: address ?? this.address,
-      pin: pin ?? this.pin,
-      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
   }
 }
