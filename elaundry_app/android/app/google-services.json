@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1039020278532",
+    "firebase_url": "https://elaundry-494ce-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "elaundry-494ce",
+    "storage_bucket": "elaundry-494ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039020278532:android:07e5a5558db07cb8870651",
+        "android_client_info": {
+          "package_name": "com.example.elaundry_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1039020278532-bhtft4vog3e32pj6ngvnudlv9s6e2mmq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.elaundry_app",
+            "certificate_hash": "1658fbc8b0d1798523d55e23bbdc9a6a60a8f958"
+          }
+        },
+        {
+          "client_id": "1039020278532-t0q1bfri6qp5oth0nr5iqqa4bh7kjml0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo8UKId-zhLJRolx_DwY__XyO0sD7k9jI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1039020278532-t0q1bfri6qp5oth0nr5iqqa4bh7kjml0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

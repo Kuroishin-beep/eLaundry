@@ -192,7 +192,6 @@ class _MachinesScreenState extends State<MachinesScreen> {
                           _selectedFilter,
                           style: const TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),

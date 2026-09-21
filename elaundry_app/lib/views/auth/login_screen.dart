@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:elaundry_app/shared/widgets/custom_icons.dart';
 import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/themes/theme.dart';
 import 'register_screen.dart';
 import '../settings/settings_screen.dart';
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _authController = AuthController();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // LOADING SCREEN
+  // SUBMIT & AUTHENTICATE
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
@@ -45,8 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       try {
-        // 2. Perform authentication request
-        await Future.delayed(const Duration(seconds: 3));
+        // 2. Perform real authentication request with Firebase
+        await _authController.signInWithEmail(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
         // 3. Clear auth stack and navigate directly to SettingsScreen
         if (mounted) {
@@ -59,6 +64,72 @@ class _LoginScreenState extends State<LoginScreen> {
         // If an error occurs, pop only the LoadingScreen back to LoginScreen
         if (mounted) {
           Navigator.of(context).pop();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              content: Text(
+                error.toString().replaceAll('Exception: ', ''),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    // 1. Show the full LoadingScreen
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder:
+            (_, __, ___) => const LoadingScreen(
+              title: 'Signing in to eLaundry...',
+              subtitle: 'Connecting your Google account...',
+            ),
+        transitionsBuilder:
+            (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 250),
+      ),
+    );
+
+    try {
+      // 2. Trigger Google Sign-In via your AuthController
+      await _authController.signInWithGoogle();
+
+      // 3. Clear the navigation stack and head to SettingsScreen
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+          (route) => false,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        // Pop the LoadingScreen back to LoginScreen
+        Navigator.of(context).pop();
+
+        // Do not show an error snackbar if the user merely tapped outside or canceled
+        if (!error.toString().toLowerCase().contains('cancel')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              content: Text(
+                error.toString().replaceAll('Exception: ', ''),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
         }
       }
     }
@@ -71,7 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final screenHeight = mediaQuery.size.height;
     final bannerHeight = screenHeight * 0.38;
     const overlapAmount = 32.0;
-    const GoogleIcon();
 
     return Scaffold(
       backgroundColor: AppColors.neutral[500],
@@ -149,9 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     width: 100,
                                     height: 100,
                                   ),
-
                                   const SizedBox(height: 8),
-
                                   Text(
                                     "Let's get you Login",
                                     textAlign: TextAlign.center,
@@ -225,6 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         style: theme.textTheme.labelLarge
                                             ?.copyWith(
                                               color: AppColors.secondary[900],
+                                              fontSize: 14,
                                             ),
                                       ),
                                       const SizedBox(height: 8),
@@ -269,6 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         style: theme.textTheme.labelLarge
                                             ?.copyWith(
                                               color: AppColors.secondary[900],
+                                              fontSize: 14,
                                             ),
                                       ),
                                       const SizedBox(height: 8),
@@ -415,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                       // GOOGLE SIGN-IN BUTTON
                                       OutlinedButton.icon(
-                                        onPressed: () {},
+                                        onPressed: _handleGoogleSignIn,
                                         style: OutlinedButton.styleFrom(
                                           minimumSize: const Size(0, 50),
                                           side: BorderSide(

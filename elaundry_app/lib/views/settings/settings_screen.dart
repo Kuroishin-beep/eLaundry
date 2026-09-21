@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../shared/widgets/laundry_navigation_fab.dart';
 import '../auth/login_screen.dart';
@@ -16,11 +17,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
 
   // Stored state for editable values
+  String? _profileImagePath; // Holds image path/URL if picked
   String _email = 'you@example.com';
   String _accountName = 'Juan Dela Cruz';
   String _storeName = 'eLaundry Central Branch';
   String _address = 'Mabalacat Pampanga';
   String _pin = '1234';
+
+  void _showImagePickerOptions() {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder:
+          (BuildContext context) => CupertinoActionSheet(
+            title: const Text('Profile Photo'),
+            message: const Text('Select a source to update your profile photo'),
+            actions: <CupertinoActionSheetAction>[
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Hook into your image picker library (e.g., ImageSource.camera)
+                },
+                child: const Text('Take Photo'),
+              ),
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Hook into your image picker library (e.g., ImageSource.gallery)
+                },
+                child: const Text('Choose from Gallery'),
+              ),
+              if (_profileImagePath != null)
+                CupertinoActionSheetAction(
+                  isDestructiveAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() => _profileImagePath = null);
+                  },
+                  child: const Text('Remove Photo'),
+                ),
+            ],
+            cancelButton: CupertinoActionSheetAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ),
+    );
+  }
 
   void _openEditor({
     required String title,
@@ -55,8 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor:
-          AppColors.neutral[400], // Soft neutral light grey background
+      backgroundColor: AppColors.neutral[400],
       appBar: AppBar(
         title: Text(
           'Settings',
@@ -85,6 +127,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 _SettingsCard(
                   children: [
+                    // Profile Picture Tile
+                    _SettingsTile(
+                      icon: Icons.camera_alt_rounded,
+                      title: 'Profile Picture',
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primary[100],
+                            backgroundImage:
+                                _profileImagePath != null
+                                    ? NetworkImage(_profileImagePath!)
+                                    : null,
+                            child:
+                                _profileImagePath == null
+                                    ? Icon(
+                                      Icons.person_rounded,
+                                      size: 20,
+                                      color: AppColors.primary[700],
+                                    )
+                                    : null,
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20,
+                            color: AppColors.secondary[300],
+                          ),
+                        ],
+                      ),
+                      onTap: _showImagePickerOptions,
+                    ),
+
+                    const _CardDivider(),
+
+                    _SettingsTile(
+                      icon: Icons.mail,
+                      title: 'Email Address',
+                      onTap:
+                          () => _openEditor(
+                            title: 'Email Address',
+                            label: 'Email',
+                            currentValue: _email,
+                            fieldType: SettingFieldType.email,
+                            onSave: (val) => _email = val,
+                          ),
+                    ),
+
+                    const _CardDivider(),
+
+                    _SettingsTile(
+                      icon: Icons.account_circle,
+                      title: 'Account Name',
+                      onTap:
+                          () => _openEditor(
+                            title: 'Account Name',
+                            label: 'Full Name',
+                            currentValue: _accountName,
+                            fieldType: SettingFieldType.text,
+                            onSave: (val) => _accountName = val,
+                          ),
+                    ),
+
+                    const _CardDivider(),
+
+                    _SettingsTile(
+                      icon: Icons.lock,
+                      title: 'Password',
+                      onTap:
+                          () => _openEditor(
+                            title: 'Change Password',
+                            label: 'New Password',
+                            currentValue: '',
+                            fieldType: SettingFieldType.password,
+                            helperText: 'Must be at least 6 characters long',
+                            onSave: (val) {},
+                          ),
+                    ),
+
+                    const _CardDivider(),
+
                     _SettingsTile(
                       icon: Icons.notifications_rounded,
                       title: 'Notifications',
@@ -99,48 +223,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.mail,
-                      title: 'Email Address',
-                      onTap:
-                          () => _openEditor(
-                            title: 'Email Address',
-                            label: 'Email',
-                            currentValue: _email,
-                            fieldType: SettingFieldType.email,
-                            onSave: (val) => _email = val,
-                          ),
-                    ),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.account_circle,
-                      title: 'Account Name',
-                      onTap:
-                          () => _openEditor(
-                            title: 'Account Name',
-                            label: 'Full Name',
-                            currentValue: _accountName,
-                            fieldType: SettingFieldType.text,
-                            onSave: (val) => _accountName = val,
-                          ),
-                    ),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.lock,
-                      title: 'Password',
-                      onTap:
-                          () => _openEditor(
-                            title: 'Change Password',
-                            label: 'New Password',
-                            currentValue: '',
-                            fieldType: SettingFieldType.password,
-                            helperText: 'Must be at least 6 characters long',
-                            onSave: (val) {},
-                          ),
-                    ),
                   ],
                 ),
+
                 const SizedBox(height: 20),
 
                 // Store Section
@@ -201,13 +286,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: Icons.logout_rounded,
                       title: 'Logout',
                       isDestructive: true,
-                      onTap: () {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
+                      onTap: () async {
+                        try {
+                          await AuthController().signOut();
+
+                          if (context.mounted) {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) => const LoginScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.redAccent,
+                                content: Text('Failed to logout: $e'),
+                              ),
+                            );
+                          }
+                        }
                       },
                     ),
                   ],
@@ -289,11 +389,10 @@ class _SettingsTile extends StatelessWidget {
         isDestructive ? AppColors.accent : AppColors.secondary[300];
 
     return Padding(
-      // Outer padding creates an inset boundary for the ink splash
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(10), // Tighter rounded rect
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -301,11 +400,9 @@ class _SettingsTile extends StatelessWidget {
           splashColor: AppColors.neutral[400],
           highlightColor: AppColors.neutral[300],
           child: Padding(
-            // Inner padding keeps content spacing balanced
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
             child: Row(
               children: [
-                // Soft rounded square around each icon
                 Container(
                   width: 38,
                   height: 38,
@@ -356,7 +453,7 @@ class _CardDivider extends StatelessWidget {
     return Divider(
       height: 1,
       thickness: 0.8,
-      indent: 64, // Aligns after the icon box
+      indent: 64,
       endIndent: 14,
       color: AppColors.neutral[400],
     );

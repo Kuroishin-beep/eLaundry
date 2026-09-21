@@ -14,4 +14,27 @@ class UserModel {
     this.profileImage,
     this.createdAt,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'profileImage': profileImage,
+      'createdAt': createdAt?.toIso8601String(),
+    };
+  }
+
+  factory UserModel.fromMap(Map<String, dynamic> map, String docId) {
+    return UserModel(
+      id: docId,
+      fullName: map['fullName'] ?? '',
+      email: map['email'] ?? '',
+      phone: map['phone'],
+      profileImage: map['profileImage'],
+      createdAt:
+          map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
+    );
+  }
 }

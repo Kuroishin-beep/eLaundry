@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:elaundry_app/shared/widgets/custom_icons.dart';
 import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/themes/theme.dart';
 import 'login_screen.dart';
+import '../settings/settings_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _authController = AuthController();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
@@ -29,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // LOADING SCREEN
+  // SUBMIT & REGISTER
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
@@ -50,15 +53,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       try {
-        // 2. Perform authentication / registration request
-        await Future.delayed(const Duration(seconds: 3));
+        // 2. Perform real registration request with Firebase
+        await _authController.registerWithEmail(
+          fullName: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
-        // 3. Dismiss loading and pop back to LoginScreen
+        // 3. Dismiss loading and return to LoginScreen
         if (mounted) {
-          // Pops LoadingScreen and RegisterScreen, landing on LoginScreen
           Navigator.of(context).popUntil((route) => route.isFirst);
 
-          // Optional: Notify the user on the LoginScreen
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: AppColors.primary[700],
@@ -74,19 +79,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       } catch (error) {
-        // If registration fails, pop only the LoadingScreen so the user can fix the form
+        // If registration fails, pop only the LoadingScreen so the user can fix errors
         if (mounted) {
           Navigator.of(context).pop();
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: AppColors.error,
+              backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               content: Text(
-                'Registration failed: $error',
+                error.toString().replaceAll('Exception: ', ''),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    // 1. Show the full LoadingScreen
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder:
+            (_, __, ___) => const LoadingScreen(
+              title: 'Registering with Google...',
+              subtitle: 'Setting up your laundry basket...',
+            ),
+        transitionsBuilder:
+            (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 250),
+      ),
+    );
+
+    try {
+      // 2. Trigger Google Sign-In via your AuthController
+      await _authController.signInWithGoogle();
+
+      // 3. Clear the navigation stack and head to SettingsScreen
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+          (route) => false,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        // Pop the LoadingScreen back to RegisterScreen
+        Navigator.of(context).pop();
+
+        if (!error.toString().toLowerCase().contains('cancel')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              content: Text(
+                error.toString().replaceAll('Exception: ', ''),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -103,7 +159,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final screenHeight = mediaQuery.size.height;
     final bannerHeight = screenHeight * 0.38;
     const overlapAmount = 32.0;
-    const GoogleIcon();
 
     return Scaffold(
       backgroundColor: AppColors.neutral[500],
@@ -175,15 +230,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  // Brand Badge
                                   Image.asset(
                                     'assets/images/elaundry-logo.png',
                                     width: 100,
                                     height: 100,
                                   ),
-
                                   const SizedBox(height: 8),
-
                                   Text(
                                     'Register to eLaundry',
                                     textAlign: TextAlign.center,
@@ -214,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
 
-                    // OVERLAPPING FORM SHEET EXTENDING TO BOTTOM
+                    // OVERLAPPING FORM SHEET
                     Expanded(
                       child: Transform.translate(
                         offset: const Offset(0, -overlapAmount),
@@ -347,11 +399,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       TextFormField(
                                         controller: _passwordController,
                                         obscureText: _obscurePassword,
-                                        textInputAction: TextInputAction.done,
+                                        textInputAction: TextInputAction.next,
                                         autofillHints: const [
                                           AutofillHints.password,
                                         ],
-                                        onFieldSubmitted: (_) => _submit(),
                                         style: theme.textTheme.bodyMedium,
                                         decoration: InputDecoration(
                                           hintText: '••••••••',
@@ -427,11 +478,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             onPressed:
                                                 () => setState(
                                                   () =>
-                                                      _obscurePassword =
-                                                          !_obscurePassword,
+                                                      _obscureConfirmPassword =
+                                                          !_obscureConfirmPassword,
                                                 ),
                                             icon: Icon(
-                                              _obscurePassword
+                                              _obscureConfirmPassword
                                                   ? Icons.visibility_outlined
                                                   : Icons
                                                       .visibility_off_outlined,
@@ -442,10 +493,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Please enter your password';
+                                            return 'Please confirm your password';
                                           }
-                                          if (value.length < 6) {
-                                            return 'Must be at least 6 characters';
+                                          if (value !=
+                                              _passwordController.text) {
+                                            return 'Passwords do not match';
                                           }
                                           return null;
                                         },
@@ -453,7 +505,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                       const SizedBox(height: 26),
 
-                                      // Main Sign-In Button
+                                      // REGISTER BUTTON
                                       SizedBox(
                                         height: 50,
                                         child: ElevatedButton(
@@ -469,7 +521,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                       const SizedBox(height: 22),
 
-                                      // Divider
+                                      // DIVIDER
                                       Row(
                                         children: [
                                           Expanded(
@@ -535,7 +587,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                       // GOOGLE SIGN-IN BUTTON
                                       OutlinedButton.icon(
-                                        onPressed: () {},
+                                        onPressed: _handleGoogleSignIn,
                                         style: OutlinedButton.styleFrom(
                                           minimumSize: const Size(0, 50),
                                           side: BorderSide(
