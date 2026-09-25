@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/themes/theme.dart';
 import '../../views/laundry/machine_screen.dart';
 import '../../views/settings/settings_screen.dart';
+import '../../views/employee/staff_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -205,7 +206,17 @@ class _NavigationGridCard extends StatelessWidget {
       ),
       _NavItemData(icon: Icons.sell_rounded, label: 'Item'),
       _NavItemData(icon: Icons.alarm_rounded, label: 'Shift'),
-      _NavItemData(icon: Icons.badge_rounded, label: 'Employee'),
+      _NavItemData(
+        icon: Icons.badge_rounded,
+        label: 'Employee',
+        onTap: () {
+          if (context.findAncestorWidgetOfExactType<StaffScreen>() == null) {
+            _navigateTo(context, const StaffScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(icon: Icons.insert_chart_rounded, label: 'Reports'),
       _NavItemData(
         icon: Icons.settings_rounded,
