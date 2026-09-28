@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/themes/theme.dart';
-import '../../models/staff_model.dart';
+import '../../../core/themes/theme.dart';
+import '../../../models/staff_model.dart';
 import 'edit_staff_screen.dart';
 
 class StaffDetailsScreen extends StatefulWidget {
@@ -149,8 +149,8 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const mintBgColor = Color(0xFFD4E5E3);
-    const topBarBgColor = Color(0xFFE8ECEC);
+    final mintBgColor = AppColors.primary[100]!;
+    final topBarBgColor = AppColors.neutral[500]!;
 
     return Scaffold(
       backgroundColor: mintBgColor,

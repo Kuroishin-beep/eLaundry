@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
 import '../../models/machine_model.dart';
+import '../../shared/input_decoration.dart';
 
 class NewMachineScreen extends StatefulWidget {
   const NewMachineScreen({super.key});
@@ -113,11 +114,8 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                           controller: _nameController,
                           textInputAction: TextInputAction.next,
                           style: theme.textTheme.bodyMedium,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: 'e.g. LG Titan Washer',
-                            hintStyle: TextStyle(
-                              color: AppColors.secondary[300],
-                            ),
                             prefixIcon: Container(
                               alignment: Alignment.center,
                               width: 32,
@@ -138,7 +136,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'CATEGORY',
+                          'TAGS',
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: AppColors.secondary[700],
                             fontSize: 11.5,
@@ -160,7 +158,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                               setState(() => _selectedCategory = val);
                             }
                           },
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             prefixIcon: Icon(
                               Icons.category_rounded,
                               size: 20,
@@ -307,11 +305,8 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                           controller: _notesController,
                           maxLines: 4,
                           style: theme.textTheme.bodyMedium,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: 'Write your text here...',
-                            hintStyle: TextStyle(
-                              color: AppColors.secondary[300],
-                            ),
                             alignLabelWithHint: true,
                           ),
                         ),

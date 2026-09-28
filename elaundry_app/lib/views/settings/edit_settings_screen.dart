@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/themes/theme.dart';
+import '../../shared/input_decoration.dart';
 
 enum SettingFieldType { text, email, password, number, multiline }
 
@@ -148,9 +149,9 @@ class _EditSettingsScreenState extends State<EditSettingsScreen> {
                                 ? 3
                                 : 1,
                         style: theme.textTheme.bodyMedium,
-                        decoration: InputDecoration(
+                        decoration: appInputDecoration(
                           hintText: 'Enter ${widget.label.toLowerCase()}',
-                          hintStyle: TextStyle(color: AppColors.secondary[300]),
+                        ).copyWith(
                           helperText: widget.helperText,
                           suffixIcon:
                               widget.fieldType == SettingFieldType.password

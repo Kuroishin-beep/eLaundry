@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/themes/theme.dart';
-import '../../models/staff_model.dart';
+import '../../../core/themes/theme.dart';
+import '../../../models/staff_model.dart';
+import '../../../shared/input_decoration.dart';
 
 class EditStaffScreen extends StatefulWidget {
   final StaffMember? staffToEdit;
@@ -92,13 +93,10 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hintStyle = TextStyle(
-      color: AppColors.secondary[200],
-      fontSize: 13.5,
-    );
+    final pageBgColor = AppColors.primary[100]!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFD6E3E2),
+      backgroundColor: pageBgColor,
       appBar: AppBar(
         title: Text(
           _isEditing ? 'Edit Staff' : 'New Staff',
@@ -191,9 +189,8 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         const _Label(label: 'EMPLOYEE NAME'),
                         TextFormField(
                           controller: _nameController,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: 'Juan Dela Cruz',
-                            hintStyle: hintStyle,
                             prefixIcon: const Icon(
                               Icons.badge_outlined,
                               size: 20,
@@ -222,7 +219,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                                   .toList(),
                           onChanged:
                               (val) => setState(() => _selectedRole = val!),
-                          decoration: const InputDecoration(
+                          decoration: appInputDecoration(
                             prefixIcon: Icon(
                               Icons.work_outline_rounded,
                               size: 20,
@@ -236,9 +233,8 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         TextFormField(
                           controller: _noteController,
                           maxLines: 3,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: 'Write your text here...',
-                            hintStyle: hintStyle,
                             alignLabelWithHint: true,
                           ),
                         ),
@@ -260,15 +256,13 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           obscureText: true,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: '••••',
-                            hintStyle: hintStyle,
-                            counterText: '',
                             prefixIcon: const Icon(
                               Icons.dialpad_rounded,
                               size: 20,
                             ),
-                          ),
+                          ).copyWith(counterText: ''),
                           validator:
                               (val) =>
                                   val != null && val.length == 4
@@ -288,9 +282,8 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: 'employee@elaundry.ph',
-                            hintStyle: hintStyle,
                             prefixIcon: const Icon(
                               Icons.mail_outline_rounded,
                               size: 20,
@@ -307,9 +300,8 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         TextFormField(
                           controller: _contactController,
                           keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
+                          decoration: appInputDecoration(
                             hintText: '+63 987 123 4560',
-                            hintStyle: hintStyle,
                             prefixIcon: const Icon(
                               Icons.phone_outlined,
                               size: 20,

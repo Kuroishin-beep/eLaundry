@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/themes/theme.dart';
+import '../core/themes/theme.dart';
+import 'input_decoration.dart';
 
 class CapsuleSearchFilterBar extends StatelessWidget {
   final TextEditingController controller;
@@ -48,8 +49,7 @@ class CapsuleSearchFilterBar extends StatelessWidget {
                 color: Color(0xFF2C2C2C),
                 height: 1.0,
               ),
-              decoration: InputDecoration(
-                hintText: hintText,
+              decoration: appInputDecoration(hintText: hintText).copyWith(
                 hintStyle: const TextStyle(
                   color: Color(0xFF8E8E8E),
                   fontSize: 14.5,

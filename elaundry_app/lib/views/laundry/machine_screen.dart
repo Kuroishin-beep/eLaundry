@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
 import '../../models/machine_model.dart';
-import '../../shared/widgets/laundry_navigation_fab.dart';
-import '../../shared/widgets/search_filter_bar.dart';
+import '../../shared/laundry_navigation_fab.dart';
+import '../../shared/search_filter_bar.dart';
 import 'new_machine_screen.dart';
 import 'machine_card.dart';
 
@@ -208,7 +208,9 @@ class _MachinesScreenState extends State<MachinesScreen> {
                       )
                     else
                       const SizedBox.shrink(),
+
                     const Spacer(),
+
                     ElevatedButton.icon(
                       onPressed: _navigateToAddMachine,
                       style: ElevatedButton.styleFrom(

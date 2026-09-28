@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../core/themes/theme.dart';
-import '../../shared/widgets/laundry_navigation_fab.dart';
+import '../../shared/laundry_navigation_fab.dart';
 import '../auth/login_screen.dart';
 import 'edit_settings_screen.dart';
 

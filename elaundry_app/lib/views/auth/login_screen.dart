@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:elaundry_app/shared/widgets/custom_icons.dart';
-import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
+import 'package:elaundry_app/shared/custom_icons.dart';
+import 'package:elaundry_app/shared/custom_widgets.dart';
+import 'package:elaundry_app/shared/input_decoration.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/themes/theme.dart';
 import 'register_screen.dart';
@@ -306,11 +307,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           AutofillHints.email,
                                         ],
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: 'you@example.com',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.alternate_email_rounded,
                                             size: 20,
@@ -351,11 +349,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ],
                                         onFieldSubmitted: (_) => _submit(),
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: '••••••••',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,
                                             size: 20,

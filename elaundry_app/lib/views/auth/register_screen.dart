@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:elaundry_app/shared/widgets/custom_icons.dart';
-import 'package:elaundry_app/shared/widgets/custom_widgets.dart';
+import 'package:elaundry_app/shared/custom_icons.dart';
+import 'package:elaundry_app/shared/custom_widgets.dart';
+import 'package:elaundry_app/shared/input_decoration.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/themes/theme.dart';
 import 'login_screen.dart';
@@ -320,11 +321,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           AutofillHints.name,
                                         ],
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: 'Juan Dela Cruz',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.account_circle_outlined,
                                             size: 20,
@@ -360,11 +358,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           AutofillHints.email,
                                         ],
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: 'you@example.com',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.alternate_email_rounded,
                                             size: 20,
@@ -404,11 +399,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           AutofillHints.password,
                                         ],
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: '••••••••',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,
                                             size: 20,
@@ -463,11 +455,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         ],
                                         onFieldSubmitted: (_) => _submit(),
                                         style: theme.textTheme.bodyMedium,
-                                        decoration: InputDecoration(
+                                        decoration: appInputDecoration(
                                           hintText: '••••••••',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.secondary[300],
-                                          ),
                                           prefixIcon: Icon(
                                             Icons.lock_outline_rounded,
                                             size: 20,

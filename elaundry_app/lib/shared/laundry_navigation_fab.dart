@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../core/themes/theme.dart';
-import '../../views/laundry/machine_screen.dart';
-import '../../views/settings/settings_screen.dart';
-import '../../views/employee/staff_screen.dart';
+import '../core/themes/theme.dart';
+import '../views/laundry/machine_screen.dart';
+import '../views/settings/settings_screen.dart';
+import '../views/employee/employee_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -210,8 +210,8 @@ class _NavigationGridCard extends StatelessWidget {
         icon: Icons.badge_rounded,
         label: 'Employee',
         onTap: () {
-          if (context.findAncestorWidgetOfExactType<StaffScreen>() == null) {
-            _navigateTo(context, const StaffScreen());
+          if (context.findAncestorWidgetOfExactType<EmployeeScreen>() == null) {
+            _navigateTo(context, const EmployeeScreen());
           } else {
             onClose();
           }
