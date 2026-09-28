@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
 import '../../../models/role_model.dart';
 import '../../../shared/input_decoration.dart';
+import '../../../shared/field_label.dart';
+import '../../../shared/section_card.dart';
+import 'widgets/role_permission_group.dart';
 
 class EditRoleScreen extends StatefulWidget {
   final RoleItem? roleToEdit;
@@ -128,11 +131,11 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ================= CARD 1: ROLE DETAILS =================
-                  _FormCard(
+                  SectionCard(
                     stepNumber: '1',
                     title: 'ROLE DETAILS',
                     children: [
-                      const _FieldLabel(label: 'ROLE NAME'),
+                      const FieldLabel(label: 'ROLE NAME'),
                       TextFormField(
                         controller: _nameController,
                         decoration: appInputDecoration(
@@ -150,7 +153,7 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                                     : null,
                       ),
                       const SizedBox(height: 16),
-                      const _FieldLabel(label: 'PICK AN ICON'),
+                      const FieldLabel(label: 'PICK AN ICON'),
                       InkWell(
                         onTap: () {},
                         borderRadius: BorderRadius.circular(10),
@@ -188,7 +191,7 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const _FieldLabel(label: 'ROLE DESCRIPTION'),
+                      const FieldLabel(label: 'ROLE DESCRIPTION'),
                       TextFormField(
                         controller: _descController,
                         maxLines: 4,
@@ -203,15 +206,15 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                   const SizedBox(height: 16),
 
                   // ================= CARD 2: ACCESS & PERMISSIONS =================
-                  _FormCard(
+                  SectionCard(
                     stepNumber: '2',
                     title: 'ACCESS & PERMISSIONS',
                     children: [
-                      _InteractivePermissionGroup(
+                      RolePermissionGroup(
                         title: 'ORDERS',
                         icon: Icons.shopping_bag_outlined,
                         items: [
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Process Payments',
                             isChecked: _permissions.processPayments,
                             onToggle:
@@ -221,7 +224,7 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                                   );
                                 }),
                           ),
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Transaction History',
                             isChecked: _permissions.transactionHistory,
                             onToggle:
@@ -234,11 +237,11 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _InteractivePermissionGroup(
+                      RolePermissionGroup(
                         title: 'CATALOG',
                         icon: Icons.inventory_2_outlined,
                         items: [
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Manage Items',
                             isChecked: _permissions.manageItems,
                             onToggle:
@@ -248,7 +251,7 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                                   );
                                 }),
                           ),
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Manage Category',
                             isChecked: _permissions.manageCategory,
                             onToggle:
@@ -261,11 +264,11 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _InteractivePermissionGroup(
+                      RolePermissionGroup(
                         title: 'LAUNDRY',
                         icon: Icons.local_laundry_service_outlined,
                         items: [
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Manage Machines',
                             isChecked: _permissions.manageMachines,
                             onToggle:
@@ -278,11 +281,11 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _InteractivePermissionGroup(
+                      RolePermissionGroup(
                         title: 'SHIFT',
                         icon: Icons.alarm_rounded,
                         items: [
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Shift Management',
                             isChecked: _permissions.shiftManagement,
                             onToggle:
@@ -292,7 +295,7 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                                   );
                                 }),
                           ),
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Shift Report',
                             isChecked: _permissions.shiftReport,
                             onToggle:
@@ -305,11 +308,11 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _InteractivePermissionGroup(
+                      RolePermissionGroup(
                         title: 'ANALYTICS & REPORTS',
                         icon: Icons.analytics_outlined,
                         items: [
-                          _PermissionItemConfig(
+                          RolePermissionItem(
                             label: 'Access Report',
                             isChecked: _permissions.accessReport,
                             onToggle:
@@ -328,185 +331,6 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FormCard extends StatelessWidget {
-  final String stepNumber;
-  final String title;
-  final List<Widget> children;
-
-  const _FormCard({
-    required this.stepNumber,
-    required this.title,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  stepNumber,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF2C2D2D),
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String label;
-
-  const _FieldLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF4A4E4D),
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _PermissionItemConfig {
-  final String label;
-  final bool isChecked;
-  final ValueChanged<bool> onToggle;
-
-  const _PermissionItemConfig({
-    required this.label,
-    required this.isChecked,
-    required this.onToggle,
-  });
-}
-
-class _InteractivePermissionGroup extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<_PermissionItemConfig> items;
-
-  const _InteractivePermissionGroup({
-    required this.title,
-    required this.icon,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FBFA),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E7E6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFF4B4F4E)),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF3D403F),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(height: 1, color: Color(0xFFE5ECEB)),
-          const SizedBox(height: 6),
-          ...items.map((item) {
-            return InkWell(
-              onTap: () => item.onToggle(!item.isChecked),
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(
-                      item.isChecked
-                          ? Icons.check_box_rounded
-                          : Icons.check_box_outline_blank_rounded,
-                      size: 20,
-                      color:
-                          item.isChecked
-                              ? (AppColors.primary[500] ?? AppColors.accent)
-                              : const Color(0xFF9EA7A6),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      item.label,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF333534),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
       ),
     );
   }

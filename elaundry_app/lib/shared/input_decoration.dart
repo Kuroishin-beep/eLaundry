@@ -14,7 +14,7 @@ InputDecoration appInputDecoration({
     hintText: hintText,
     hintStyle: TextStyle(
       color: AppColors.secondary[300] ?? const Color(0xFFBAC0BF),
-      fontSize: 13.5,
+      fontSize: 16,
     ),
     filled: true,
     fillColor: Colors.white,

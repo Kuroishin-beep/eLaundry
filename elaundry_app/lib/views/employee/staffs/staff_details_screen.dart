@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/staff_model.dart';
+import '../../../shared/field_label.dart';
 import 'edit_staff_screen.dart';
+import 'widgets/staff_info_field.dart';
+import 'widgets/staff_stat_card.dart';
 
 class StaffDetailsScreen extends StatefulWidget {
   final StaffMember staff;
@@ -289,7 +292,7 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: _StatCard(
+                        child: StaffStatCard(
                           icon: Icons.payments_rounded,
                           value: _currentStaff.totalSales,
                           label: 'Sales',
@@ -297,7 +300,7 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: _StatCard(
+                        child: StaffStatCard(
                           icon: Icons.work_rounded,
                           value: '${_currentStaff.attendanceDays} days',
                           label: 'Attendance',
@@ -314,19 +317,19 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _InfoField(
+                      StaffInfoField(
                         label: 'START DATE',
                         icon: Icons.calendar_today_outlined,
                         value: _currentStaff.startDate,
                       ),
                       const SizedBox(height: 14),
-                      _InfoField(
+                      StaffInfoField(
                         label: 'EMAIL ADDRESS',
                         icon: Icons.mail_outline_rounded,
                         value: _currentStaff.email,
                       ),
                       const SizedBox(height: 14),
-                      _InfoField(
+                      StaffInfoField(
                         label: 'CONTACT NUMER',
                         icon: Icons.phone_outlined,
                         value: _currentStaff.contactNumber,
@@ -345,109 +348,6 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF0D9488), size: 24),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16.5,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF282A29),
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: Color(0xFF8F9998)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoField extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String value;
-
-  const _InfoField({
-    required this.label,
-    required this.icon,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF555B5A),
-            letterSpacing: 0.3,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFF6B7270)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF333534),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _NotesField extends StatelessWidget {
   final String label;
   final String value;
@@ -459,14 +359,11 @@ class _NotesField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF555B5A),
-            letterSpacing: 0.3,
-          ),
+        FieldLabel(
+          label: label,
+          color: Color(0xFF555B5A),
+          letterSpacing: 0.3,
+          bottomSpacing: 0,
         ),
         const SizedBox(height: 5),
         Container(

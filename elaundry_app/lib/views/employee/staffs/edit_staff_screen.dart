@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/staff_model.dart';
+import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
+import 'widgets/staff_section_card.dart';
 
 class EditStaffScreen extends StatefulWidget {
   final StaffMember? staffToEdit;
@@ -130,9 +132,9 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- 1. BASIC INFORMATION ---
-                    _SectionCard(
+                    StaffSectionCard(
                       stepNumber: '1',
-                      stepTitle: 'BASIC INFORMATION',
+                      title: 'BASIC INFORMATION',
                       children: [
                         // Image Upload Area
                         Container(
@@ -186,7 +188,10 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         const SizedBox(height: 14),
 
                         // Name
-                        const _Label(label: 'EMPLOYEE NAME'),
+                        const FieldLabel(
+                          label: 'EMPLOYEE NAME',
+                          letterSpacing: 0,
+                        ),
                         TextFormField(
                           controller: _nameController,
                           decoration: appInputDecoration(
@@ -205,7 +210,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         const SizedBox(height: 14),
 
                         // Role
-                        const _Label(label: 'ROLE'),
+                        const FieldLabel(label: 'ROLE', letterSpacing: 0),
                         DropdownButtonFormField<String>(
                           value: _selectedRole,
                           items:
@@ -229,7 +234,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         const SizedBox(height: 14),
 
                         // Note
-                        const _Label(label: 'NOTE'),
+                        const FieldLabel(label: 'NOTE', letterSpacing: 0),
                         TextFormField(
                           controller: _noteController,
                           maxLines: 3,
@@ -243,11 +248,14 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                     const SizedBox(height: 16),
 
                     // --- 2. SECURITY & SIGN-IN ---
-                    _SectionCard(
+                    StaffSectionCard(
                       stepNumber: '2',
-                      stepTitle: 'SECURITY & SIGN-IN',
+                      title: 'SECURITY & SIGN-IN',
                       children: [
-                        const _Label(label: 'SECURITY PIN (NUMPAD ONLY)'),
+                        const FieldLabel(
+                          label: 'SECURITY PIN',
+                          letterSpacing: 0,
+                        ),
                         TextFormField(
                           controller: _pinController,
                           keyboardType: TextInputType.number,
@@ -274,11 +282,14 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                     const SizedBox(height: 16),
 
                     // --- 3. CONTACT DETAILS ---
-                    _SectionCard(
+                    StaffSectionCard(
                       stepNumber: '3',
-                      stepTitle: 'CONTACT DETAILS',
+                      title: 'CONTACT DETAILS',
                       children: [
-                        const _Label(label: 'EMAIL ADDRESS'),
+                        const FieldLabel(
+                          label: 'EMAIL ADDRESS',
+                          letterSpacing: 0,
+                        ),
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -296,7 +307,10 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                                       : 'Valid email required',
                         ),
                         const SizedBox(height: 14),
-                        const _Label(label: 'CONTACT NUMBER'),
+                        const FieldLabel(
+                          label: 'CONTACT NUMBER',
+                          letterSpacing: 0,
+                        ),
                         TextFormField(
                           controller: _contactController,
                           keyboardType: TextInputType.phone,
@@ -331,94 +345,6 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String stepNumber;
-  final String stepTitle;
-  final List<Widget> children;
-
-  const _SectionCard({
-    required this.stepNumber,
-    required this.stepTitle,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  stepNumber,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                stepTitle,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF454746),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...children,
-        ],
-      ),
-    );
-  }
-}
-
-class _Label extends StatelessWidget {
-  final String label;
-
-  const _Label({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.secondary[700],
         ),
       ),
     );

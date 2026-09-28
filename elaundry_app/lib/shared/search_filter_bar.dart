@@ -45,14 +45,14 @@ class CapsuleSearchFilterBar extends StatelessWidget {
               onChanged: onChanged,
               textAlignVertical: TextAlignVertical.center,
               style: const TextStyle(
-                fontSize: 14.5,
+                fontSize: 16,
                 color: Color(0xFF2C2C2C),
                 height: 1.0,
               ),
               decoration: appInputDecoration(hintText: hintText).copyWith(
                 hintStyle: const TextStyle(
                   color: Color(0xFF8E8E8E),
-                  fontSize: 14.5,
+                  fontSize: 16,
                   height: 1.0,
                 ),
                 isCollapsed: true,

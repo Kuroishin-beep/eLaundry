@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/role_model.dart';
+import '../../../shared/detail_value_box.dart';
+import '../../../shared/field_label.dart';
+import '../../../shared/section_card.dart';
 import 'edit_role_screen.dart';
+import 'widgets/role_permission_group.dart';
 
 class RoleDetailsScreen extends StatefulWidget {
   final RoleItem role;
@@ -314,386 +318,158 @@ class _RoleDetailsScreenState extends State<RoleDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ================= SECTION 1: ROLE DETAILS =================
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 22,
-                            height: 22,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              '1',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'ROLE DETAILS',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF555B5A),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
+                SectionCard(
+                  stepIcon: Icons.badge_rounded,
+                  title: 'ROLE DETAILS',
+                  children: [
+                    const FieldLabel(label: 'ROLE NAME'),
 
-                      const SizedBox(height: 16),
+                    DetailValueBox(
+                      icon: Icons.track_changes_rounded,
+                      text: _currentRole.name,
+                    ),
 
-                      const _SubLabel(label: 'ROLE NAME'),
+                    const SizedBox(height: 16),
 
-                      _DetailBox(
-                        icon: Icons.track_changes_rounded,
-                        text: _currentRole.name,
+                    const FieldLabel(label: 'PICK AN ICON'),
+
+                    DetailValueBox(
+                      iconWidget: const Icon(
+                        Icons.point_of_sale_rounded,
+                        color: AppColors.accent,
+                        size: 18,
                       ),
-                      const SizedBox(height: 16),
-                      const _SubLabel(label: 'PICK AN ICON'),
-                      _DetailBox(
-                        iconWidget: const Icon(
-                          Icons.point_of_sale_rounded,
-                          color: AppColors.accent,
-                          size: 18,
-                        ),
-                        text: _currentRole.iconName,
-                        hasChevron: true,
+                      text: _currentRole.iconName,
+                      hasChevron: true,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    const FieldLabel(label: 'ROLE DESCRIPTION'),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFC7CFCE)),
                       ),
-                      const SizedBox(height: 16),
-                      const _SubLabel(label: 'ROLE DESCRIPTION'),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFC7CFCE)),
-                        ),
-                        child: Text(
-                          _currentRole.description.isEmpty
-                              ? 'No description provided.'
-                              : _currentRole.description,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color:
-                                _currentRole.description.isEmpty
-                                    ? const Color(0xFF9EA7A6)
-                                    : const Color(0xFF444645),
-                            height: 1.35,
-                          ),
+                      child: Text(
+                        _currentRole.description.isEmpty
+                            ? 'No description provided.'
+                            : _currentRole.description,
+                        style: TextStyle(
+                          color:
+                              _currentRole.description.isEmpty
+                                  ? const Color(0xFF9EA7A6)
+                                  : const Color(0xFF444645),
+                          height: 1.35,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 16),
 
                 // ================= SECTION 2: ACCESS & PERMISSIONS =================
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 22,
-                            height: 22,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              '2',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'ACCESS & PERMISSIONS',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF555B5A),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
+                SectionCard(
+                  stepIcon: Icons.key_rounded,
+                  title: 'ACCESS & PERMISSIONS',
+                  children: [
+                    // Orders
+                    RolePermissionGroup(
+                      title: 'ORDERS',
+                      icon: Icons.shopping_bag_outlined,
+                      padding: const EdgeInsets.all(14),
+                      compact: true,
+                      items: [
+                        RolePermissionItem(
+                          label: 'Process Payments',
+                          isChecked: _currentRole.permissions.processPayments,
+                        ),
+                        RolePermissionItem(
+                          label: 'Transaction History',
+                          isChecked:
+                              _currentRole.permissions.transactionHistory,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                      const SizedBox(height: 16),
+                    // Catalog
+                    RolePermissionGroup(
+                      title: 'CATALOG',
+                      icon: Icons.inventory_2_outlined,
+                      padding: const EdgeInsets.all(14),
+                      compact: true,
+                      items: [
+                        RolePermissionItem(
+                          label: 'Manage Items',
+                          isChecked: _currentRole.permissions.manageItems,
+                        ),
+                        RolePermissionItem(
+                          label: 'Manage Category',
+                          isChecked: _currentRole.permissions.manageCategory,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                      // Orders
-                      _PermissionCard(
-                        categoryTitle: 'ORDERS',
-                        categoryIcon: Icons.shopping_bag_outlined,
-                        items: [
-                          _PermissionViewItem(
-                            label: 'Process Payments',
-                            isChecked: _currentRole.permissions.processPayments,
-                          ),
-                          _PermissionViewItem(
-                            label: 'Transaction History',
-                            isChecked:
-                                _currentRole.permissions.transactionHistory,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
+                    // Laundry
+                    RolePermissionGroup(
+                      title: 'LAUNDRY',
+                      icon: Icons.local_laundry_service_outlined,
+                      padding: const EdgeInsets.all(14),
+                      compact: true,
+                      items: [
+                        RolePermissionItem(
+                          label: 'Manage Machines',
+                          isChecked: _currentRole.permissions.manageMachines,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                      // Catalog
-                      _PermissionCard(
-                        categoryTitle: 'CATALOG',
-                        categoryIcon: Icons.inventory_2_outlined,
-                        items: [
-                          _PermissionViewItem(
-                            label: 'Manage Items',
-                            isChecked: _currentRole.permissions.manageItems,
-                          ),
-                          _PermissionViewItem(
-                            label: 'Manage Category',
-                            isChecked: _currentRole.permissions.manageCategory,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
+                    // Shift
+                    RolePermissionGroup(
+                      title: 'SHIFT',
+                      icon: Icons.alarm_rounded,
+                      padding: const EdgeInsets.all(14),
+                      compact: true,
+                      items: [
+                        RolePermissionItem(
+                          label: 'Shift Management',
+                          isChecked: _currentRole.permissions.shiftManagement,
+                        ),
+                        RolePermissionItem(
+                          label: 'Shift Report',
+                          isChecked: _currentRole.permissions.shiftReport,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                      // Laundry
-                      _PermissionCard(
-                        categoryTitle: 'LAUNDRY',
-                        categoryIcon: Icons.local_laundry_service_outlined,
-                        items: [
-                          _PermissionViewItem(
-                            label: 'Manage Machines',
-                            isChecked: _currentRole.permissions.manageMachines,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Shift
-                      _PermissionCard(
-                        categoryTitle: 'SHIFT',
-                        categoryIcon: Icons.alarm_rounded,
-                        items: [
-                          _PermissionViewItem(
-                            label: 'Shift Management',
-                            isChecked: _currentRole.permissions.shiftManagement,
-                          ),
-                          _PermissionViewItem(
-                            label: 'Shift Report',
-                            isChecked: _currentRole.permissions.shiftReport,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Analytics & Reports
-                      _PermissionCard(
-                        categoryTitle: 'ANALYTICS & REPORTS',
-                        categoryIcon: Icons.analytics_outlined,
-                        items: [
-                          _PermissionViewItem(
-                            label: 'Access Report',
-                            isChecked: _currentRole.permissions.accessReport,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    // Analytics & Reports
+                    RolePermissionGroup(
+                      title: 'ANALYTICS & REPORTS',
+                      icon: Icons.analytics_outlined,
+                      padding: const EdgeInsets.all(14),
+                      compact: true,
+                      items: [
+                        RolePermissionItem(
+                          label: 'Access Report',
+                          isChecked: _currentRole.permissions.accessReport,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PermissionViewItem {
-  final String label;
-  final bool isChecked;
-
-  const _PermissionViewItem({required this.label, required this.isChecked});
-}
-
-class _SubLabel extends StatelessWidget {
-  final String label;
-
-  const _SubLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF4A4E4D),
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _DetailBox extends StatelessWidget {
-  final IconData? icon;
-  final Widget? iconWidget;
-  final String text;
-  final bool hasChevron;
-
-  const _DetailBox({
-    this.icon,
-    this.iconWidget,
-    required this.text,
-    this.hasChevron = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFC7CFCE)),
-      ),
-      child: Row(
-        children: [
-          iconWidget ?? Icon(icon, size: 18, color: AppColors.secondary[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF333534)),
-            ),
-          ),
-          if (hasChevron)
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: Color(0xFF6B7270),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PermissionCard extends StatelessWidget {
-  final String categoryTitle;
-  final IconData categoryIcon;
-  final List<_PermissionViewItem> items;
-
-  const _PermissionCard({
-    required this.categoryTitle,
-    required this.categoryIcon,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FBFA),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E7E6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(categoryIcon, size: 16, color: const Color(0xFF4B4F4E)),
-              const SizedBox(width: 8),
-              Text(
-                categoryTitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF3D403F),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(height: 1, color: Color(0xFFE8ECEC)),
-          const SizedBox(height: 8),
-          ...items.map((item) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    item.isChecked
-                        ? Icons.check_box_rounded
-                        : Icons.check_box_outline_blank_rounded,
-                    size: 18,
-                    color:
-                        item.isChecked
-                            ? AppColors.primary[500]!
-                            : const Color(0xFF9EA7A6),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight:
-                          item.isChecked ? FontWeight.w600 : FontWeight.w400,
-                      color: const Color(0xFF333534),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
       ),
     );
   }
