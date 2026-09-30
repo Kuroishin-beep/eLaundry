@@ -38,44 +38,31 @@ class StoreContextResolver {
       // Employee accounts are intentionally denied access to the store root.
     }
 
-    final employees = _firestore.collectionGroup('employees');
-    QuerySnapshot<Map<String, dynamic>> snapshot;
+    // Employee accounts carry their store membership in their user profile.
+    // Reading this document avoids a collection-group query, which cannot be
+    // authorized safely for an employee account.
     try {
-      snapshot =
-          await employees
-              .where('account_uid', isEqualTo: user.uid)
-              .limit(1)
-              .get();
-      if (snapshot.docs.isEmpty && user.email != null) {
-        snapshot =
-            await employees
-                .where('email', isEqualTo: user.email!.trim().toLowerCase())
-                .limit(1)
-                .get();
+      final profile = await _firestore.collection('users').doc(user.uid).get();
+      if (!profile.exists) {
+        throw StateError('This account is not assigned to a store.');
       }
+      final data = profile.data()!;
+      final storeId = data['storeId'] as String?;
+      if (storeId == null || storeId.isEmpty) {
+        throw StateError('This account is not assigned to a store.');
+      }
+      return StoreContext(
+        storeId: storeId,
+        isOwner: false,
+        role: data['role'] as String?,
+        permissions: RolePermissions.fromMap(_map(data['role_permissions'])),
+      );
     } on FirebaseException catch (error) {
       throw StateError(
-        'Unable to resolve the employee store membership '
+        'Unable to resolve the employee store profile '
         '(${error.code}: ${error.message ?? 'Firestore denied the query'}).',
       );
     }
-    if (snapshot.docs.isEmpty) {
-      throw StateError('This account is not assigned to a store.');
-    }
-
-    final employee = snapshot.docs.first;
-    final store = employee.reference.parent.parent;
-    if (store == null) {
-      throw StateError('The employee store membership is invalid.');
-    }
-    return StoreContext(
-      storeId: store.id,
-      isOwner: false,
-      role: employee.data()['role'] as String?,
-      permissions: RolePermissions.fromMap(
-        _map(employee.data()['role_permissions']),
-      ),
-    );
   }
 
   static Map<String, dynamic>? _map(dynamic value) {

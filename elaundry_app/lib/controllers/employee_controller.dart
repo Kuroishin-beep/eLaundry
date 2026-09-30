@@ -62,6 +62,12 @@ class EmployeeController {
       await employee.reference.update({
         'role_permissions': role.permissions.toMap(),
       });
+      final accountUid = employee.data()['account_uid'] as String?;
+      if (accountUid != null && accountUid.isNotEmpty) {
+        await _userProfile(accountUid).set({
+          'role_permissions': role.permissions.toMap(),
+        }, SetOptions(merge: true));
+      }
     }
   }
 
@@ -102,6 +108,11 @@ class EmployeeController {
       'account_uid': uid,
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
     });
+    await _userProfile(uid).set({
+      'storeId': await _storeId,
+      'role': saved.role,
+      'role_permissions': role.docs.first.data()['permissions'] ?? {},
+    }, SetOptions(merge: true));
     return saved;
   }
 
@@ -117,12 +128,26 @@ class EmployeeController {
       ...employee.toMap(),
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
     });
+    await _userProfile(employee.id).set({
+      'storeId': await _storeId,
+      'role': employee.role,
+      'role_permissions': role.docs.first.data()['permissions'] ?? {},
+    }, SetOptions(merge: true));
   }
 
   Future<void> deleteEmployee(String employeeId) async {
     final store = await _store;
     await store.doc(employeeId).delete();
+    // Keep the account profile, but remove its store membership and access.
+    await _userProfile(employeeId).set({
+      'storeId': null,
+      'role': null,
+      'role_permissions': const {},
+    }, SetOptions(merge: true));
   }
+
+  DocumentReference<Map<String, dynamic>> _userProfile(String uid) =>
+      _firestore.collection('users').doc(uid);
 
   Future<String> _createAuthAccount({
     required String email,
