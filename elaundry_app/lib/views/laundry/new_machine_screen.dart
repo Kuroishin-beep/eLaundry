@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
 import '../../models/machine_model.dart';
+import '../../shared/field_label.dart';
 import '../../shared/input_decoration.dart';
+import '../../shared/section_card.dart';
 
 class NewMachineScreen extends StatefulWidget {
   const NewMachineScreen({super.key});
@@ -14,14 +16,18 @@ class NewMachineScreen extends StatefulWidget {
 class _NewMachineScreenState extends State<NewMachineScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _tierController = TextEditingController(text: 'STANDARD');
+  final _quantityController = TextEditingController(text: '1');
   final _notesController = TextEditingController();
 
   String _selectedCategory = 'Washers';
-  final List<String> _categories = ['Washers', 'Dryers', 'Services'];
+  final List<String> _categories = ['Washers', 'Dryers'];
 
   @override
   void dispose() {
     _nameController.dispose();
+    _tierController.dispose();
+    _quantityController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -33,27 +39,15 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
       final newMachine = MachineItem(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
-        count: 1,
-        tier: 'STANDARD',
+        count: int.parse(_quantityController.text.trim()),
+        tier: _tierController.text.trim(),
         type:
             _selectedCategory == 'Dryers'
                 ? MachineType.dryer
                 : MachineType.washer,
+        note: _notesController.text.trim(),
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          content: const Text(
-            'Machine successfully created!',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-
-      // Return the created model back to MachinesScreen
       Navigator.of(context).pop(newMachine);
     }
   }
@@ -63,7 +57,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.neutral[400],
+      backgroundColor: AppColors.primary[100],
       appBar: AppBar(
         title: Text(
           'New Machine',
@@ -97,33 +91,34 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- 1. BASIC INFORMATION ---
-                    _SectionCard(
+                    SectionCard(
                       stepNumber: '1',
-                      stepTitle: 'BASIC INFORMATION',
+                      title: 'BASIC INFORMATION',
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 14,
+                      shadowOpacity: 0.02,
+                      shadowOffset: const Offset(0, 3),
+                      titleFontSize: 11.5,
+                      titleColor: const Color(0xFF454746),
+                      titleLetterSpacing: 0,
+                      contentSpacing: 14,
                       children: [
-                        Text(
-                          'NAME',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: AppColors.secondary[700],
-                            fontSize: 11.5,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
+                        const FieldLabel(label: 'NAME', letterSpacing: 0),
                         TextFormField(
                           controller: _nameController,
                           textInputAction: TextInputAction.next,
                           style: theme.textTheme.bodyMedium,
                           decoration: appInputDecoration(
                             hintText: 'e.g. LG Titan Washer',
-                            prefixIcon: Container(
-                              alignment: Alignment.center,
-                              width: 32,
-                              child: Text(
-                                'Aa',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.secondary[500],
+                            prefixIcon: const SizedBox(
+                              width: 48,
+                              child: Center(
+                                child: Text(
+                                  'Aa',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF6B7270),
+                                  ),
                                 ),
                               ),
                             ),
@@ -134,16 +129,11 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                                       ? 'Please enter machine name'
                                       : null,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'TAGS',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: AppColors.secondary[700],
-                            fontSize: 11.5,
-                            letterSpacing: 0.5,
-                          ),
+                        const SizedBox(height: 8),
+                        const FieldLabel(
+                          label: 'MACHINE TYPE',
+                          letterSpacing: 0,
                         ),
-                        const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           value: _selectedCategory,
                           items:
@@ -166,14 +156,78 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        const FieldLabel(label: 'TIER', letterSpacing: 0),
+                        TextFormField(
+                          controller: _tierController,
+                          textInputAction: TextInputAction.next,
+                          decoration: appInputDecoration(
+                            hintText: 'e.g. STANDARD or PLUS+',
+                            prefixIcon: const Icon(
+                              Icons.sell_outlined,
+                              size: 20,
+                            ),
+                          ),
+                          validator:
+                              (value) =>
+                                  value == null || value.trim().isEmpty
+                                      ? 'Please enter machine tier'
+                                      : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    SectionCard(
+                      stepNumber: '2',
+                      title: 'QUANTITY',
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 14,
+                      shadowOpacity: 0.02,
+                      shadowOffset: const Offset(0, 3),
+                      titleFontSize: 11.5,
+                      titleColor: const Color(0xFF454746),
+                      titleLetterSpacing: 0,
+                      contentSpacing: 14,
+                      children: [
+                        const FieldLabel(
+                          label: 'MACHINE COUNT',
+                          letterSpacing: 0,
+                        ),
+                        TextFormField(
+                          controller: _quantityController,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                          decoration: appInputDecoration(
+                            hintText: '1',
+                            prefixIcon: const Icon(
+                              Icons.dialpad_rounded,
+                              size: 20,
+                            ),
+                          ),
+                          validator: (value) {
+                            final quantity = int.tryParse(value?.trim() ?? '');
+                            return quantity == null || quantity < 1
+                                ? 'Enter a quantity of at least 1'
+                                : null;
+                          },
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
 
                     // --- 2. APPEARANCE ---
-                    _SectionCard(
-                      stepNumber: '2',
-                      stepTitle: 'APPEARANCE',
+                    SectionCard(
+                      stepNumber: '3',
+                      title: 'APPEARANCE',
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 14,
+                      shadowOpacity: 0.02,
+                      shadowOffset: const Offset(0, 3),
+                      titleFontSize: 11.5,
+                      titleColor: const Color(0xFF454746),
+                      titleLetterSpacing: 0,
+                      contentSpacing: 14,
                       children: [
                         InkWell(
                           onTap: () {},
@@ -219,17 +273,11 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                         const SizedBox(height: 16),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          padding: const EdgeInsets.symmetric(vertical: 20),
                           decoration: BoxDecoration(
-                            color: AppColors.primary[100]?.withValues(
-                              alpha: 0.35,
-                            ),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.primary[400]!,
-                              width: 1.2,
-                              style: BorderStyle.solid,
-                            ),
+                            border: Border.all(color: AppColors.neutral[500]!),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -244,40 +292,29 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 10,
-                                  ),
                                 ),
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.file_upload_outlined,
                                   size: 18,
-                                  color: AppColors.secondary[800],
                                 ),
-                                label: Text(
+                                label: const Text(
                                   'Upload image',
-                                  style: TextStyle(
-                                    color: AppColors.secondary[900],
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
+                                  style: TextStyle(color: Color(0xFF2B2D2C)),
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               Text(
                                 'Choose an image',
                                 style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.secondary[700],
+                                  fontSize: 11,
+                                  color: AppColors.secondary[600],
                                 ),
                               ),
-                              const SizedBox(height: 2),
                               Text(
-                                'JPG, JPEG, PNG, WEBP',
+                                'JPG, JPEG, PNG, WEBP.',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.secondary[500],
+                                  fontSize: 10,
+                                  color: AppColors.secondary[400],
                                 ),
                               ),
                             ],
@@ -288,19 +325,19 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                     const SizedBox(height: 16),
 
                     // --- 3. OPTIONAL ---
-                    _SectionCard(
-                      stepNumber: '3',
-                      stepTitle: 'OPTIONAL',
+                    SectionCard(
+                      stepNumber: '4',
+                      title: 'OPTIONAL',
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 14,
+                      shadowOpacity: 0.02,
+                      shadowOffset: const Offset(0, 3),
+                      titleFontSize: 11.5,
+                      titleColor: const Color(0xFF454746),
+                      titleLetterSpacing: 0,
+                      contentSpacing: 14,
                       children: [
-                        Text(
-                          'NOTES',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: AppColors.secondary[700],
-                            fontSize: 11.5,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
+                        const FieldLabel(label: 'NOTES', letterSpacing: 0),
                         TextFormField(
                           controller: _notesController,
                           maxLines: 4,
@@ -312,7 +349,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // Save Action Button
                     SizedBox(
@@ -334,75 +371,6 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String stepNumber;
-  final String stepTitle;
-  final List<Widget> children;
-
-  const _SectionCard({
-    required this.stepNumber,
-    required this.stepTitle,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    stepNumber,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                stepTitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF444645),
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
       ),
     );
   }

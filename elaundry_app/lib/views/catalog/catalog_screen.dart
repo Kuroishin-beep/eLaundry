@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/catalog_controller.dart';
+import '../../controllers/machine_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/catalog_models.dart';
 import '../../shared/laundry_navigation_fab.dart';
@@ -22,6 +23,7 @@ class CatalogScreen extends StatefulWidget {
 
 class _CatalogScreenState extends State<CatalogScreen> {
   final CatalogController _catalogController = CatalogController();
+  final MachineController _machineController = MachineController();
   final _searchController = TextEditingController();
   int _selectedTabIndex = 0; // 0: Item, 1: Category
   bool _isGridView = false;
@@ -44,11 +46,15 @@ class _CatalogScreenState extends State<CatalogScreen> {
   void _openAddItem() async {
     try {
       final categoryOptions = await _getItemCategoryOptions();
+      final machineOptions = await _getItemMachineOptions();
       if (!mounted) return;
       final newItem = await Navigator.of(context).push<CatalogItem>(
         MaterialPageRoute(
           builder:
-              (context) => EditItemScreen(categoryOptions: categoryOptions),
+              (context) => EditItemScreen(
+                categoryOptions: categoryOptions,
+                machineOptions: machineOptions,
+              ),
         ),
       );
       if (newItem != null) await _catalogController.createItem(newItem);
@@ -85,12 +91,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _openItemDetails(CatalogItem item) async {
     final categoryOptions = await _getItemCategoryOptions();
+    final machineOptions = await _getItemMachineOptions();
     if (!mounted) return;
     final result = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder:
-            (context) =>
-                ItemDetailsScreen(item: item, categoryOptions: categoryOptions),
+            (context) => ItemDetailsScreen(
+              item: item,
+              categoryOptions: categoryOptions,
+              machineOptions: machineOptions,
+            ),
       ),
     );
     if (!mounted || result == null) return;
@@ -111,6 +121,15 @@ class _CatalogScreenState extends State<CatalogScreen> {
     return categories
         .where((category) => !category.isDiscount)
         .map((category) => category.name)
+        .toSet()
+        .toList();
+  }
+
+  Future<List<String>> _getItemMachineOptions() async {
+    final machines = await _machineController.getMachines();
+    return machines
+        .map((machine) => machine.tier.trim())
+        .where((tier) => tier.isNotEmpty)
         .toSet()
         .toList();
   }

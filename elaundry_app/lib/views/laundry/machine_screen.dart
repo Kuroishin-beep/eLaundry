@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/machine_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/machine_model.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
-import 'new_machine_screen.dart';
 import 'machine_card.dart';
+import 'machine_details_screen.dart';
+import 'new_machine_screen.dart';
 
 class MachinesScreen extends StatefulWidget {
   const MachinesScreen({super.key});
@@ -15,39 +17,16 @@ class MachinesScreen extends StatefulWidget {
 }
 
 class _MachinesScreenState extends State<MachinesScreen> {
+  final MachineController _machineController = MachineController();
   final _searchController = TextEditingController();
   String _selectedFilter = 'All';
+  late final Stream<List<MachineItem>> _machinesStream;
 
-  final List<MachineItem> _machines = [
-    const MachineItem(
-      id: '1',
-      name: 'LG Titan Washer',
-      count: 5,
-      tier: 'PLUS+',
-      type: MachineType.washer,
-    ),
-    const MachineItem(
-      id: '2',
-      name: 'LG Titan Dryer',
-      count: 5,
-      tier: 'PLUS+',
-      type: MachineType.dryer,
-    ),
-    const MachineItem(
-      id: '3',
-      name: 'LG Giant Dryer',
-      count: 5,
-      tier: 'STANDARD',
-      type: MachineType.dryer,
-    ),
-    const MachineItem(
-      id: '4',
-      name: 'LG Giant Washer',
-      count: 5,
-      tier: 'STANDARD',
-      type: MachineType.washer,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _machinesStream = _machineController.watchMachines();
+  }
 
   @override
   void dispose() {
@@ -55,8 +34,35 @@ class _MachinesScreenState extends State<MachinesScreen> {
     super.dispose();
   }
 
-  List<MachineItem> get _filteredMachines {
-    return _machines.where((m) {
+  Future<void> _openMachineDetails(MachineItem machine) async {
+    final result = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute(
+        builder: (context) => MachineDetailsScreen(machine: machine),
+      ),
+    );
+    if (!mounted || result == null) return;
+
+    try {
+      if (result == 'deleted') {
+        await _machineController.deleteMachine(machine.id);
+        if (mounted) {
+          _showMachineSnackBar('Machine deleted.');
+        }
+      } else if (result is MachineItem) {
+        await _machineController.updateMachine(result);
+        if (mounted) {
+          _showMachineSnackBar('Machine updated.');
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMachineSnackBar('Unable to update machine: $error');
+      }
+    }
+  }
+
+  List<MachineItem> _filteredMachines(List<MachineItem> machines) {
+    return machines.where((m) {
       final matchesSearch = m.name.toLowerCase().contains(
         _searchController.text.toLowerCase().trim(),
       );
@@ -131,15 +137,37 @@ class _MachinesScreenState extends State<MachinesScreen> {
   }
 
   Future<void> _navigateToAddMachine() async {
-    final newMachine = await Navigator.of(context).push<MachineItem>(
-      MaterialPageRoute(builder: (context) => const NewMachineScreen()),
-    );
+    try {
+      final newMachine = await Navigator.of(context).push<MachineItem>(
+        MaterialPageRoute(builder: (context) => const NewMachineScreen()),
+      );
 
-    if (newMachine != null) {
-      setState(() {
-        _machines.add(newMachine);
-      });
+      if (newMachine != null) {
+        await _machineController.createMachine(newMachine);
+        if (mounted) {
+          _showMachineSnackBar(
+            'Machine successfully created!',
+            backgroundColor: AppColors.primary[500],
+          );
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMachineSnackBar('Unable to save machine: $error');
+      }
     }
+  }
+
+  void _showMachineSnackBar(String message, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
   }
 
   @override
@@ -233,19 +261,56 @@ class _MachinesScreenState extends State<MachinesScreen> {
                 const SizedBox(height: 16),
 
                 // Machine Grid
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _filteredMachines.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.78,
-                  ),
-                  itemBuilder: (context, index) {
-                    final item = _filteredMachines[index];
-                    return MachineCard(item: item);
+                StreamBuilder<List<MachineItem>>(
+                  stream: _machinesStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          'Unable to load machines: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.secondary[600]),
+                        ),
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final machines = _filteredMachines(snapshot.data!);
+                    if (machines.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Text(
+                            'No machines found.',
+                            style: TextStyle(color: AppColors.secondary[500]),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: machines.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                            childAspectRatio: 0.78,
+                          ),
+                      itemBuilder:
+                          (context, index) => MachineCard(
+                            item: machines[index],
+                            onTap: () => _openMachineDetails(machines[index]),
+                          ),
+                    );
                   },
                 ),
               ],

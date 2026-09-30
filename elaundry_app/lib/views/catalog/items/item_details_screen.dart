@@ -9,11 +9,13 @@ import 'edit_item_screen.dart';
 class ItemDetailsScreen extends StatefulWidget {
   final CatalogItem item;
   final List<String> categoryOptions;
+  final List<String> machineOptions;
 
   const ItemDetailsScreen({
     super.key,
     required this.item,
     this.categoryOptions = const ['Services', 'Add-on'],
+    this.machineOptions = const [],
   });
 
   @override
@@ -121,6 +123,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
             (context) => EditItemScreen(
               itemToEdit: _currentItem,
               categoryOptions: widget.categoryOptions,
+              machineOptions: widget.machineOptions,
             ),
       ),
     );

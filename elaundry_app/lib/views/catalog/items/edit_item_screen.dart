@@ -10,11 +10,13 @@ import '../widgets/catalog_section_card.dart';
 class EditItemScreen extends StatefulWidget {
   final CatalogItem? itemToEdit;
   final List<String> categoryOptions;
+  final List<String> machineOptions;
 
   const EditItemScreen({
     super.key,
     this.itemToEdit,
     this.categoryOptions = const ['Services', 'Add-on'],
+    this.machineOptions = const [],
   });
 
   @override
@@ -59,18 +61,38 @@ class _EditItemScreenState extends State<EditItemScreen> {
     return options.isEmpty ? ['Services', 'Add-on'] : options;
   }
 
+  List<String> get _availableMachineOptions {
+    final options =
+        widget.machineOptions
+            .where((machine) => machine.trim().isNotEmpty)
+            .toSet()
+            .toList();
+    final currentMachine = widget.itemToEdit?.machineType;
+    if (currentMachine != null &&
+        currentMachine.isNotEmpty &&
+        !options.contains(currentMachine)) {
+      options.insert(0, currentMachine);
+    }
+    return options;
+  }
+
+  bool get _hasMachineOptions =>
+      widget.machineOptions.any((machine) => machine.trim().isNotEmpty);
+
   @override
   void initState() {
     super.initState();
     final item = widget.itemToEdit;
     final categories = _availableCategoryOptions;
-    const machines = ['Standard', 'Titan', 'Plus+'];
+    final machines = _availableMachineOptions;
     _selectedCategory =
         categories.contains(item?.category) ? item!.category : categories.first;
     _selectedMachine =
         machines.contains(item?.machineType)
             ? item!.machineType
-            : machines.first;
+            : machines.isNotEmpty
+            ? machines.first
+            : '';
     _nameController = TextEditingController(text: item?.name ?? '');
     _priceController = TextEditingController(
       text: item?.price.toString() ?? '0',
@@ -418,9 +440,17 @@ class _EditItemScreenState extends State<EditItemScreen> {
                         const SizedBox(height: 14),
                         const FieldLabel(label: 'MACHINE', letterSpacing: 0),
                         DropdownButtonFormField<String>(
-                          value: _selectedMachine,
+                          value:
+                              _selectedMachine.isEmpty
+                                  ? null
+                                  : _selectedMachine,
+                          hint: Text(
+                            _hasMachineOptions
+                                ? 'Select a machine'
+                                : 'No machines available',
+                          ),
                           items:
-                              ['Standard', 'Titan', 'Plus+']
+                              _availableMachineOptions
                                   .map(
                                     (m) => DropdownMenuItem(
                                       value: m,
@@ -429,7 +459,13 @@ class _EditItemScreenState extends State<EditItemScreen> {
                                   )
                                   .toList(),
                           onChanged:
-                              (val) => setState(() => _selectedMachine = val!),
+                              _hasMachineOptions
+                                  ? (val) {
+                                    if (val != null) {
+                                      setState(() => _selectedMachine = val);
+                                    }
+                                  }
+                                  : null,
                           decoration: appInputDecoration(
                             prefixIcon: const Icon(
                               Icons.local_laundry_service_rounded,

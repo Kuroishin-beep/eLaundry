@@ -7,6 +7,7 @@ class MachineItem {
   final String tier; // e.g. PLUS+, STANDARD
   final MachineType type;
   final bool isAvailable;
+  final String note;
 
   const MachineItem({
     required this.id,
@@ -15,5 +16,6 @@ class MachineItem {
     required this.tier,
     required this.type,
     this.isAvailable = true,
+    this.note = '',
   });
 }
