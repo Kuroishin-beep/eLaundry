@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../controllers/transaction_controller.dart';
 import '../../core/themes/theme.dart';
-import '../../models/order_models.dart';
 import '../../models/transaction_model.dart';
+import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
 import 'transaction_details_screen.dart';
@@ -16,207 +19,77 @@ class TransactionHistoryScreen extends StatefulWidget {
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
+  final TransactionController _transactionController = TransactionController();
   final _searchController = TextEditingController();
   bool _isGridView = false;
+  final List<TransactionModel> _transactions = [];
+  StreamSubscription<List<TransactionModel>>? _transactionsSubscription;
+  Object? _loadError;
+  bool _isLoading = true;
 
-  final List<TransactionModel> _transactions = [
-    const TransactionModel(
-      id: '#123456',
-      customerName: 'Juan Dela Cruz',
-      contactNumber: '0967 676 7676',
-      dateTime: 'August 21, 2026 • 10:00 AM',
-      time: '10:00 AM',
-      baskets: [
-        BasketItem(number: 1, weight: 6),
-        BasketItem(number: 2, weight: 7),
-      ],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          duration: '38 mins',
-          price: 80,
-          quantity: 2,
-          isService: true,
-        ),
-        OrderLineItem(
-          id: '2',
-          name: 'Regular Dry',
-          tier: 'STANDARD',
-          duration: '40 mins',
-          price: 80,
-          quantity: 2,
-          isService: true,
-        ),
-        OrderLineItem(
-          id: '3',
-          name: 'Fabric Softener',
-          tier: 'STANDARD',
-          price: 10,
-          quantity: 1,
-          isService: false,
-        ),
-        OrderLineItem(
-          id: '4',
-          name: 'Plastic Bag',
-          tier: 'STANDARD',
-          price: 5,
-          quantity: 4,
-          isService: false,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASH',
-      processedByName: 'John Doe',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123457',
-      customerName: 'Juan Dela Cruz',
-      contactNumber: '0967 676 7676',
-      dateTime: 'August 21, 2026 • 10:00 AM',
-      time: '10:00 AM',
-      baskets: [BasketItem(number: 1, weight: 8)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          price: 80,
-          quantity: 2,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASH',
-      processedByName: 'Maria Santos',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123458',
-      customerName: 'Kyle Mariano',
-      contactNumber: '0912 345 6789',
-      dateTime: 'August 21, 2026 • 09:48 AM',
-      time: '09:48 AM',
-      baskets: [BasketItem(number: 1, weight: 5)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          price: 80,
-          quantity: 2,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASHLESS',
-      processedByName: 'John Doe',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123459',
-      customerName: 'Sean Almendral',
-      contactNumber: '0922 456 7890',
-      dateTime: 'August 21, 2026 • 09:25 AM',
-      time: '09:25 AM',
-      baskets: [BasketItem(number: 1, weight: 4)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          price: 80,
-          quantity: 1,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASH',
-      processedByName: 'John Doe',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123460',
-      customerName: 'Joshua Perez',
-      contactNumber: '0933 654 3210',
-      dateTime: 'August 21, 2026 • 08:52 AM',
-      time: '08:52 AM',
-      baskets: [BasketItem(number: 1, weight: 14)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Premium Full Service',
-          tier: 'PLUS+',
-          price: 350,
-          quantity: 2,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASHLESS',
-      processedByName: 'Maria Santos',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123461',
-      customerName: 'Eya Yalung',
-      contactNumber: '0944 876 5432',
-      dateTime: 'August 21, 2026 • 09:25 AM',
-      time: '09:25 AM',
-      baskets: [BasketItem(number: 1, weight: 5)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          price: 80,
-          quantity: 1,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASH',
-      processedByName: 'John Doe',
-      processedByRole: 'Cashier',
-    ),
-    const TransactionModel(
-      id: '#123462',
-      customerName: 'Angelica Tadique',
-      contactNumber: '0955 123 7890',
-      dateTime: 'August 21, 2026 • 09:48 AM',
-      time: '09:48 AM',
-      baskets: [BasketItem(number: 1, weight: 6)],
-      items: [
-        OrderLineItem(
-          id: '1',
-          name: 'Regular Wash',
-          tier: 'STANDARD',
-          price: 80,
-          quantity: 2,
-          isService: true,
-        ),
-      ],
-      discount: 0,
-      paymentMethod: 'CASH',
-      processedByName: 'Maria Santos',
-      processedByRole: 'Cashier',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _transactionsSubscription = _transactionController
+        .watchTransactions()
+        .listen(
+          (transactions) {
+            if (!mounted) return;
+            setState(() {
+              _transactions
+                ..clear()
+                ..addAll(transactions);
+              _loadError = null;
+              _isLoading = false;
+            });
+          },
+          onError: (Object error) {
+            if (!mounted) return;
+            setState(() {
+              _loadError = error;
+              _isLoading = false;
+            });
+          },
+        );
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    unawaited(_transactionsSubscription?.cancel());
     super.dispose();
   }
 
-  void _onTransactionTap(TransactionModel tx) {
-    Navigator.of(context).push(
+  Future<void> _onTransactionTap(TransactionModel tx) async {
+    final result = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (context) => TransactionDetailsScreen(transaction: tx),
       ),
     );
+    if (result != 'unpaid') return;
+
+    try {
+      await _transactionController.markOrderUnpaid(tx.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
+          content: Text('Order marked as unpaid.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+          content: Text('Unable to mark order as unpaid: $error'),
+        ),
+      );
+    }
   }
 
   IconData _getTransactionIcon(int index) {
@@ -272,188 +145,217 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   hintText: 'Search',
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  'Today',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4B4F4E),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (_isGridView)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filtered.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.15,
-                        ),
-                    itemBuilder: (context, index) {
-                      final tx = filtered[index];
-                      return InkWell(
-                        onTap: () => _onTransactionTap(tx),
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: AppColors.neutral[500]!,
-                                      ),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Icon(
-                                      _getTransactionIcon(index),
-                                      color: AppColors.accent,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    tx.time,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      color: AppColors.secondary[400],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tx.customerName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF2C2D2D),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'P${tx.total.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF1F2221),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator()),
                   )
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final tx = filtered[index];
-                      return InkWell(
-                        onTap: () => _onTransactionTap(tx),
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
+                else if (_loadError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'Unable to load transactions: $_loadError',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.secondary[600]),
+                    ),
+                  )
+                else if (filtered.isEmpty)
+                  const SizedBox(
+                    height: 360,
+                    child: Center(
+                      child: EmptyState(
+                        icon: Icons.receipt_long_outlined,
+                        title: 'No Transactions Yet',
+                        description:
+                            'Orders will appear here after payment is completed.',
+                      ),
+                    ),
+                  )
+                else ...[
+                  const Text(
+                    'Today',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4B4F4E),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_isGridView)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filtered.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 1.15,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.neutral[500]!,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
+                      itemBuilder: (context, index) {
+                        final tx = filtered[index];
+                        return InkWell(
+                          onTap: () => _onTransactionTap(tx),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
                                 ),
-                                child: Icon(
-                                  _getTransactionIcon(index),
-                                  color: AppColors.accent,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
                                   children: [
-                                    Text(
-                                      tx.customerName,
-                                      style: const TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF2C2D2D),
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: AppColors.neutral[500]!,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Icon(
+                                        _getTransactionIcon(index),
+                                        color: AppColors.accent,
+                                        size: 20,
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
+                                    const Spacer(),
                                     Text(
                                       tx.time,
                                       style: TextStyle(
-                                        fontSize: 11.5,
+                                        fontSize: 10.5,
                                         color: AppColors.secondary[400],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              Text(
-                                'P${tx.total.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF202221),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx.customerName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF2C2D2D),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'P${tx.total.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF1F2221),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final tx = filtered[index];
+                        return InkWell(
+                          onTap: () => _onTransactionTap(tx),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.neutral[500]!,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    _getTransactionIcon(index),
+                                    color: AppColors.accent,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tx.customerName,
+                                        style: const TextStyle(
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF2C2D2D),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        tx.time,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: AppColors.secondary[400],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'P${tx.total.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF202221),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
               ],
             ),
           ),

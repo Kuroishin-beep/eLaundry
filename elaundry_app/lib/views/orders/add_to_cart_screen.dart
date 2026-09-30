@@ -108,6 +108,8 @@ class _AddToCartScreenState extends State<AddToCartScreen> {
     if (selectedItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
           content: Text('Please select at least one service or add-on.'),
         ),
       );

@@ -164,7 +164,7 @@ class _MachinesScreenState extends State<MachinesScreen> {
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../../../controllers/shift_controller.dart';
 import '../../../core/themes/theme.dart';
 import '../../../models/shift_model.dart';
 
 class ShiftDetailsScreen extends StatelessWidget {
   final ShiftModel shift;
+  final ShiftController controller;
 
-  const ShiftDetailsScreen({super.key, required this.shift});
+  const ShiftDetailsScreen({
+    super.key,
+    required this.shift,
+    required this.controller,
+  });
 
-  Future<void> _closeShift(BuildContext context) async {
+  Future<void> _closeShift(
+    BuildContext context,
+    ShiftModel currentShift,
+  ) async {
     final result = await showDialog<String>(
       context: context,
       builder:
@@ -109,14 +118,42 @@ class ShiftDetailsScreen extends StatelessWidget {
 
     if (result == null || !context.mounted) return;
 
-    final closedAt = TimeOfDay.fromDateTime(DateTime.now()).format(context);
-    Navigator.of(
-      context,
-    ).pop(shift.copyWith(isClosed: true, closedAt: closedAt));
+    try {
+      final closedShift = await controller.closeShift(currentShift);
+      if (context.mounted) Navigator.of(context).pop(closedShift);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+          content: Text('Unable to close shift: $error'),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<ShiftModel>(
+      stream: controller.watchShiftSales(shift),
+      initialData: shift,
+      builder: (context, snapshot) {
+        final currentShift = snapshot.data ?? shift;
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: AppColors.neutral[400],
+            body: Center(
+              child: Text('Unable to load shift sales: ${snapshot.error}'),
+            ),
+          );
+        }
+        return _buildScreen(context, currentShift);
+      },
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, ShiftModel currentShift) {
     return Scaffold(
       backgroundColor: AppColors.neutral[400],
       appBar: AppBar(
@@ -141,7 +178,7 @@ class ShiftDetailsScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar:
-          shift.isClosed
+          currentShift.isClosed
               ? null
               : SafeArea(
                 child: Padding(
@@ -149,7 +186,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                   child: SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () => _closeShift(context),
+                      onPressed: () => _closeShift(context, currentShift),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,
@@ -187,7 +224,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          shift.id,
+                          currentShift.id,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -196,7 +233,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          shift.dateTime,
+                          currentShift.dateTime,
                           style: TextStyle(
                             fontSize: 13,
                             color: AppColors.secondary[500],
@@ -205,12 +242,12 @@ class ShiftDetailsScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         _DetailRow(
                           label: 'Status',
-                          value: shift.isClosed ? 'Closed' : 'Active',
+                          value: currentShift.isClosed ? 'Closed' : 'Active',
                         ),
-                        if (shift.closedAt != null)
+                        if (currentShift.closedAt != null)
                           _DetailRow(
                             label: 'Closed at',
-                            value: shift.closedAt!,
+                            value: currentShift.closedAt!,
                           ),
                       ],
                     ),
@@ -226,33 +263,33 @@ class ShiftDetailsScreen extends StatelessWidget {
                       children: [
                         _DetailRow(
                           label: 'Starting cash',
-                          value: _formatAmount(shift.startingCash),
+                          value: _formatAmount(currentShift.startingCash),
                         ),
                         _DetailRow(
                           label: 'Cash payments',
-                          value: _formatAmount(shift.cashPayments),
+                          value: _formatAmount(currentShift.cashPayments),
                         ),
                         _DetailRow(
                           label: 'Cashless payments',
-                          value: _formatAmount(shift.cashlessPayments),
+                          value: _formatAmount(currentShift.cashlessPayments),
                         ),
                         _DetailRow(
                           label: 'Gross sales',
-                          value: _formatAmount(shift.grossSales),
+                          value: _formatAmount(currentShift.grossSales),
                         ),
                         _DetailRow(
                           label: 'Refunds',
-                          value: _formatAmount(shift.totalRefund),
+                          value: _formatAmount(currentShift.totalRefund),
                         ),
                         const Divider(height: 24),
                         _DetailRow(
                           label: 'Net sales',
-                          value: _formatAmount(shift.netSales),
+                          value: _formatAmount(currentShift.netSales),
                           emphasized: true,
                         ),
                         _DetailRow(
                           label: 'Pending orders',
-                          value: shift.pendingOrders.toString(),
+                          value: currentShift.pendingOrders.toString(),
                         ),
                       ],
                     ),

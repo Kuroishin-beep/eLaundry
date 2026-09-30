@@ -205,6 +205,7 @@ class LaundryOrder {
   final bool isPaid;
   final String orderStatus;
   final String qrReferenceId;
+  final String shiftId;
   final OrderMetadata? discountsApplied;
   final OrderSummary? orderSummary;
 
@@ -222,6 +223,7 @@ class LaundryOrder {
     this.isPaid = false,
     this.orderStatus = 'unpaid',
     this.qrReferenceId = '',
+    this.shiftId = '',
     this.discountsApplied,
     this.orderSummary,
   });
@@ -309,6 +311,7 @@ class LaundryOrder {
       isPaid: status.toLowerCase() == 'paid',
       orderStatus: status,
       qrReferenceId: map['qr_reference_id'] as String? ?? '',
+      shiftId: map['shift_id'] as String? ?? '',
       discountsApplied: metadata,
       orderSummary: summary,
     );
@@ -336,6 +339,7 @@ class LaundryOrder {
       'order_status': isPaid ? 'paid' : orderStatus,
       'order_summary': summary.toMap(),
       'qr_reference_id': qrReferenceId,
+      if (shiftId.isNotEmpty) 'shift_id': shiftId,
     };
   }
 
@@ -346,6 +350,7 @@ class LaundryOrder {
     String? paymentMethod,
     bool? isPaid,
     String? orderStatus,
+    String? shiftId,
   }) {
     return LaundryOrder(
       id: id ?? this.id,
@@ -361,7 +366,9 @@ class LaundryOrder {
       isPaid: isPaid ?? this.isPaid,
       orderStatus: orderStatus ?? (isPaid == true ? 'paid' : this.orderStatus),
       qrReferenceId: qrReferenceId,
+      shiftId: shiftId ?? this.shiftId,
       discountsApplied: discountsApplied,
+      orderSummary: orderSummary,
     );
   }
 }

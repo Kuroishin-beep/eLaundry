@@ -3,13 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../controllers/order_controller.dart';
+import '../../controllers/shift_controller.dart';
+import '../../controllers/transaction_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/order_models.dart';
+import '../../models/shift_model.dart';
 import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
 import 'add_to_cart_screen.dart';
 import 'order_details_screen.dart';
+import '../shift/manage/open_shift_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -20,10 +24,16 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   final OrderController _orderController = OrderController();
+  final ShiftController _shiftController = ShiftController();
+  final TransactionController _transactionController = TransactionController();
   final _searchController = TextEditingController();
   bool _isGridView = false;
   final List<LaundryOrder> _orders = [];
   StreamSubscription<List<LaundryOrder>>? _ordersSubscription;
+  StreamSubscription<ShiftModel?>? _shiftSubscription;
+  ShiftModel? _activeShift;
+  Object? _shiftError;
+  bool _isLoadingShift = true;
   Object? _ordersError;
   bool _isLoadingOrders = true;
 
@@ -49,17 +59,56 @@ class _OrdersScreenState extends State<OrdersScreen> {
         });
       },
     );
+    _shiftSubscription = _shiftController.watchActiveShift().listen(
+      (shift) {
+        if (!mounted) return;
+        setState(() {
+          _activeShift = shift;
+          _shiftError = null;
+          _isLoadingShift = false;
+        });
+      },
+      onError: (Object error) {
+        if (!mounted) return;
+        setState(() {
+          _shiftError = error;
+          _isLoadingShift = false;
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     unawaited(_ordersSubscription?.cancel());
+    unawaited(_shiftSubscription?.cancel());
     super.dispose();
+  }
+
+  Future<void> _openShift() async {
+    try {
+      final startingCash = await Navigator.of(context).push<double>(
+        MaterialPageRoute(builder: (context) => const OpenShiftScreen()),
+      );
+      if (startingCash == null || !mounted) return;
+      await _shiftController.openShift(startingCash);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+          content: Text('Unable to open shift: $error'),
+        ),
+      );
+    }
   }
 
   void _openAddOrder() async {
     try {
+      await _shiftController.requireActiveShift();
+      if (!mounted) return;
       final newOrder = await Navigator.of(context).push<LaundryOrder>(
         MaterialPageRoute(builder: (context) => const AddToCartScreen()),
       );
@@ -67,20 +116,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to create order: $error')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+            content: Text('Unable to create order: $error'),
+          ),
         );
       }
     }
   }
 
   void _onOrderTap(LaundryOrder order) async {
+    if (_activeShift == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
+          content: Text('Open a shift before processing an order.'),
+        ),
+      );
+      return;
+    }
     final result = await Navigator.of(context).push<dynamic>(
       MaterialPageRoute(builder: (context) => OrderDetailsScreen(order: order)),
     );
 
     try {
       if (result == 'paid') {
-        await _orderController.markOrderPaid(order);
+        await _transactionController.markOrderPaid(order);
       } else if (result == 'cancelled') {
         await _orderController.cancelOrder(order);
       } else if (result is LaundryOrder) {
@@ -89,7 +152,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update order: $error')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+            content: Text('Unable to update order: $error'),
+          ),
         );
       }
     }
@@ -155,6 +222,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: Center(child: CircularProgressIndicator()),
                   )
+                else if (_isLoadingShift)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
                 else if (_ordersError != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
@@ -162,6 +234,29 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       'Unable to load orders: $_ordersError',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.secondary[600]),
+                    ),
+                  )
+                else if (_shiftError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'Unable to load shift: $_shiftError',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.secondary[600]),
+                    ),
+                  )
+                else if (_activeShift == null)
+                  SizedBox(
+                    height: 360,
+                    child: Center(
+                      child: EmptyState(
+                        icon: Icons.lock_clock_outlined,
+                        title: 'No Active Shift',
+                        description:
+                            'Open a shift before creating or processing orders.',
+                        actionLabel: 'Open Shift',
+                        onAction: _openShift,
+                      ),
                     ),
                   )
                 else if (filtered.isEmpty)

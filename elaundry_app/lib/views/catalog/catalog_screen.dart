@@ -164,7 +164,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
   void _showError(Object error) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('Catalog update failed: $error')));
+    ).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+        content: Text('Catalog update failed: $error'),
+      ),
+    );
   }
 
   void _selectTab(int tabIndex) {

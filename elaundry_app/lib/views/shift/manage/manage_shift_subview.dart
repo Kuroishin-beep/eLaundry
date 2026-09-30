@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../controllers/shift_controller.dart';
 import '../../../core/themes/theme.dart';
 import '../../../models/shift_model.dart';
 import '../../../shared/empty_states.dart';
@@ -8,12 +9,14 @@ class ManageShiftSubview extends StatelessWidget {
   final List<ShiftModel> activeShifts;
   final VoidCallback onOpenNewShift;
   final ValueChanged<ShiftModel> onShiftTap;
+  final ShiftController shiftController;
 
   const ManageShiftSubview({
     super.key,
     required this.activeShifts,
     required this.onOpenNewShift,
     required this.onShiftTap,
+    required this.shiftController,
   });
 
   @override
@@ -72,10 +75,15 @@ class ManageShiftSubview extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final shift = activeShifts[index];
-              return InkWell(
-                onTap: () => onShiftTap(shift),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
+              return StreamBuilder<ShiftModel>(
+                stream: shiftController.watchShiftSales(shift),
+                initialData: shift,
+                builder: (context, snapshot) {
+                  final displayedShift = snapshot.data ?? shift;
+                  return InkWell(
+                    onTap: () => onShiftTap(displayedShift),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 14,
@@ -115,7 +123,7 @@ class ManageShiftSubview extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              shift.id,
+                              displayedShift.id,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -124,7 +132,7 @@ class ManageShiftSubview extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              shift.time,
+                              displayedShift.time,
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: AppColors.secondary[400],
@@ -134,7 +142,7 @@ class ManageShiftSubview extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'P${shift.cashPayments.toStringAsFixed(2)}',
+                        'P${displayedShift.cashPayments.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -149,7 +157,9 @@ class ManageShiftSubview extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
+                    ),
+                  );
+                },
               );
             },
           ),

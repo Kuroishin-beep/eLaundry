@@ -69,6 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SnackBar(
               backgroundColor: AppColors.primary[700],
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -88,6 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -139,6 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

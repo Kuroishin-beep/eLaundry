@@ -127,6 +127,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (paidAmt < widget.order.total) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
           content: Text('Payment amount is less than total bill!'),
         ),
       );

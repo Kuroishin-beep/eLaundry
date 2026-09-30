@@ -52,6 +52,7 @@ class _EditSettingsScreenState extends State<EditSettingsScreen> {
         SnackBar(
           backgroundColor: AppColors.primary[700],
           behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           content: Text('${widget.title} updated successfully!'),
         ),

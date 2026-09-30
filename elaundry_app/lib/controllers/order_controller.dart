@@ -3,16 +3,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/catalog_models.dart';
 import '../models/order_models.dart';
 import 'catalog_controller.dart';
+import 'shift_controller.dart';
 
 class OrderController {
   OrderController({
     FirebaseFirestore? firestore,
     CatalogController? catalogController,
+    ShiftController? shiftController,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _catalogController = catalogController ?? CatalogController();
+       _catalogController = catalogController ?? CatalogController(),
+       _shiftController = shiftController ?? ShiftController();
 
   final FirebaseFirestore _firestore;
   final CatalogController _catalogController;
+  final ShiftController _shiftController;
 
   CollectionReference<Map<String, dynamic>> get _orders =>
       _firestore.collection('orders');
@@ -57,6 +61,7 @@ class OrderController {
   }
 
   Future<LaundryOrder> createOrder(LaundryOrder order) async {
+    final activeShift = await _shiftController.requireActiveShift();
     final createdAt = DateTime.now();
     final dateKey = _dateKey(createdAt);
     final counterReference = _counters.doc('orders-$dateKey');
@@ -106,6 +111,7 @@ class OrderController {
         paymentMethod: order.paymentMethod,
         isPaid: false,
         orderStatus: 'unpaid',
+        shiftId: activeShift.id,
         qrReferenceId:
             order.qrReferenceId.isNotEmpty
                 ? order.qrReferenceId
@@ -125,8 +131,10 @@ class OrderController {
     if (order.id.trim().isEmpty) {
       throw ArgumentError.value(order.id, 'order.id', 'Order ID is required.');
     }
+    final activeShift = await _shiftController.requireActiveShift();
     final orderWithBasketAddOns = order.copyWith(
       baskets: _basketsWithAddOns(order),
+      shiftId: activeShift.id,
     );
     await _orders
         .doc(order.id)

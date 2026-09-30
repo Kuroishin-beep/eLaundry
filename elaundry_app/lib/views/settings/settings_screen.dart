@@ -66,6 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       SnackBar(
         backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
         content: Text(message, style: const TextStyle(color: Colors.white)),
       ),
     );
@@ -76,6 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       SnackBar(
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
         content: Text(message, style: const TextStyle(color: Colors.white)),
       ),
     );

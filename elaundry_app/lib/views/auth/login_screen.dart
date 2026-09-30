@@ -70,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -122,6 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
