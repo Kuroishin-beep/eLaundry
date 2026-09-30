@@ -4,7 +4,6 @@ import '../../../core/themes/theme.dart';
 import '../../../models/staff_model.dart';
 import '../../../shared/field_label.dart';
 import 'edit_staff_screen.dart';
-import 'widgets/staff_info_field.dart';
 import 'widgets/staff_stat_card.dart';
 
 class StaffDetailsScreen extends StatefulWidget {
@@ -18,8 +17,6 @@ class StaffDetailsScreen extends StatefulWidget {
 
 class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
   late StaffMember _currentStaff;
-
-  static const double _avatarDiameter = 96.0;
 
   @override
   void initState() {
@@ -152,25 +149,36 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mintBgColor = AppColors.primary[100]!;
-    final topBarBgColor = AppColors.neutral[500]!;
+    final pageBgColor = AppColors.primary[100]!;
 
     return Scaffold(
-      backgroundColor: mintBgColor,
+      backgroundColor: pageBgColor,
       appBar: AppBar(
-        backgroundColor: topBarBgColor,
+        title: Text(
+          _currentStaff.name.isEmpty ? 'Staff Details' : _currentStaff.name,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF222423),
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: Color(0xFF2C2D2D),
+            color: AppColors.secondary[900],
             size: 20,
           ),
           onPressed: () => Navigator.of(context).pop(_currentStaff),
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF2C2D2D)),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: AppColors.secondary[900],
+            ),
             onSelected: (value) {
               if (value == 'edit') {
                 _navigateToEdit();
@@ -214,132 +222,224 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 32),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Column(
-              children: [
-                // Top half block that meets the avatar center
-                Stack(
-                  alignment: Alignment.topCenter,
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Grey background segment extending exactly down to the avatar midline
-                    Container(
-                      height: _avatarDiameter / 2,
-                      width: double.infinity,
-                      color: topBarBgColor,
+      bottomNavigationBar: Container(
+        color: pageBgColor,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(_currentStaff),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: AppColors.neutral[600]!),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    // Centered circular avatar
-                    Positioned(
-                      top: 0,
-                      child: Container(
-                        width: _avatarDiameter,
-                        height: _avatarDiameter,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFC7DFDC), // Ring halo
-                        ),
-                        padding: const EdgeInsets.all(5),
+                    child: const Text(
+                      'Back',
+                      style: TextStyle(
+                        color: Color(0xFF333333),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _navigateToEdit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Edit',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // --- 1. BASIC INFORMATION ---
+                  _SectionCard(
+                    icon: Icons.badge_rounded,
+                    title: 'BASIC INFORMATION',
+                    children: [
+                      // Profile Avatar
+                      Center(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color(0xFF2F3130), // Dark charcoal circle
+                            color: const Color(0xFFC7DFDC),
+                            border: Border.all(color: Colors.white, width: 3),
                           ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            _getInitials(_currentStaff.name),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
+                          padding: const EdgeInsets.all(4),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF2F3130),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _getInitials(_currentStaff.name),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                // Height offset for the bottom half of the avatar plus vertical spacing
-                const SizedBox(height: (_avatarDiameter / 2) + 12),
+                      const SizedBox(height: 16),
 
-                // Staff Name & Role
-                Text(
-                  _currentStaff.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2A2C2B),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  _currentStaff.role,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF7A8785),
-                  ),
-                ),
-                const SizedBox(height: 22),
-
-                // Sales & Attendance Cards
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: StaffStatCard(
-                          icon: Icons.payments_rounded,
-                          value: _currentStaff.totalSales,
-                          label: 'Sales',
-                        ),
+                      // Sales & Attendance Cards below Profile Picture
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StaffStatCard(
+                              icon: Icons.payments_rounded,
+                              value:
+                                  _currentStaff.totalSales.isEmpty
+                                      ? '₱0.00'
+                                      : _currentStaff.totalSales,
+                              label: 'Sales',
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: StaffStatCard(
+                              icon: Icons.work_rounded,
+                              value: '${_currentStaff.attendanceDays} days',
+                              label: 'Attendance',
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: StaffStatCard(
-                          icon: Icons.work_rounded,
-                          value: '${_currentStaff.attendanceDays} days',
-                          label: 'Attendance',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
+                      const SizedBox(height: 16),
 
-                // Information Fields
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      StaffInfoField(
-                        label: 'START DATE',
+                      const FieldLabel(
+                        label: 'EMPLOYEE NAME',
+                        letterSpacing: 0,
+                      ),
+                      _ReadOnlyBox(
+                        icon: Icons.badge_outlined,
+                        value:
+                            _currentStaff.name.isEmpty
+                                ? 'None'
+                                : _currentStaff.name,
+                      ),
+                      const SizedBox(height: 14),
+
+                      const FieldLabel(label: 'ROLE', letterSpacing: 0),
+                      _ReadOnlyBox(
+                        icon: Icons.work_outline_rounded,
+                        value:
+                            _currentStaff.role.isEmpty
+                                ? 'None'
+                                : _currentStaff.role,
+                      ),
+                      const SizedBox(height: 14),
+
+                      const FieldLabel(label: 'START DATE', letterSpacing: 0),
+                      _ReadOnlyBox(
                         icon: Icons.calendar_today_outlined,
-                        value: _currentStaff.startDate,
+                        value:
+                            _currentStaff.startDate.isEmpty
+                                ? 'None'
+                                : _currentStaff.startDate,
                       ),
                       const SizedBox(height: 14),
-                      StaffInfoField(
-                        label: 'EMAIL ADDRESS',
-                        icon: Icons.mail_outline_rounded,
-                        value: _currentStaff.email,
+
+                      const FieldLabel(label: 'NOTE', letterSpacing: 0),
+                      Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 70),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.neutral[500]!),
+                        ),
+                        child: Text(
+                          _currentStaff.note.trim().isEmpty
+                              ? 'No additional notes provided.'
+                              : _currentStaff.note,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color:
+                                _currentStaff.note.trim().isEmpty
+                                    ? AppColors.secondary[300]
+                                    : const Color(0xFF2C2D2D),
+                            height: 1.35,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 14),
-                      StaffInfoField(
-                        label: 'CONTACT NUMER',
-                        icon: Icons.phone_outlined,
-                        value: _currentStaff.contactNumber,
-                      ),
-                      const SizedBox(height: 14),
-                      _NotesField(label: 'NOTE', value: _currentStaff.note),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+
+                  // --- 2. CONTACT DETAILS ---
+                  _SectionCard(
+                    icon: Icons.phone_in_talk_rounded,
+                    title: 'CONTACT DETAILS',
+                    children: [
+                      const FieldLabel(
+                        label: 'EMAIL ADDRESS',
+                        letterSpacing: 0,
+                      ),
+                      _ReadOnlyBox(
+                        icon: Icons.mail_outline_rounded,
+                        value:
+                            _currentStaff.email.isEmpty
+                                ? 'None'
+                                : _currentStaff.email,
+                      ),
+                      const SizedBox(height: 14),
+
+                      const FieldLabel(
+                        label: 'CONTACT NUMBER',
+                        letterSpacing: 0,
+                      ),
+                      _ReadOnlyBox(
+                        icon: Icons.phone_outlined,
+                        value:
+                            _currentStaff.contactNumber.isEmpty
+                                ? 'None'
+                                : _currentStaff.contactNumber,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -348,47 +448,98 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
   }
 }
 
-class _NotesField extends StatelessWidget {
-  final String label;
-  final String value;
+class _SectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
 
-  const _NotesField({required this.label, required this.value});
+  const _SectionCard({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FieldLabel(
-          label: label,
-          color: Color(0xFF555B5A),
-          letterSpacing: 0.3,
-          bottomSpacing: 0,
-        ),
-        const SizedBox(height: 5),
-        Container(
-          width: double.infinity,
-          height: 108,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-          child: Expanded(
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                decoration: const BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: Colors.white, size: 12),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF454746),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadOnlyBox extends StatelessWidget {
+  final IconData icon;
+  final String value;
+
+  const _ReadOnlyBox({required this.icon, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.neutral[500]!),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.secondary[600]),
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
-              value.trim().isEmpty ? 'Write your text here...' : value,
-              style: TextStyle(
-                fontSize: 12.5,
-                color:
-                    value.trim().isEmpty
-                        ? const Color(0xFFA5AEAD)
-                        : const Color(0xFF333534),
-                height: 1.3,
+              value,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF2C2D2D),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

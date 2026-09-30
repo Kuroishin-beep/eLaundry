@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/themes/theme.dart';
 import '../../../../models/catalog_models.dart';
 import '../../../../shared/field_label.dart';
-import '../widgets/catalog_section_card.dart';
+import '../widgets/icon_section_card.dart';
 import 'edit_item_screen.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
@@ -267,8 +267,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // --- 1. BASIC INFORMATION ---
-                  CatalogSectionCard(
-                    stepNumber: '1',
+                  IconSectionCard(
+                    icon: Icons.info_outline_rounded,
                     title: 'BASIC INFORMATION',
                     children: [
                       const FieldLabel(label: 'ITEM NAME', letterSpacing: 0),
@@ -313,8 +313,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                   const SizedBox(height: 16),
 
                   // --- 2. PRICING & SPECIFICATIONS ---
-                  CatalogSectionCard(
-                    stepNumber: '2',
+                  IconSectionCard(
+                    icon: Icons.sell_outlined,
                     title: 'PRICING & SPECIFICATIONS',
                     children: [
                       Row(
@@ -378,8 +378,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                   const SizedBox(height: 16),
 
                   // --- 3. OPTIONAL ---
-                  CatalogSectionCard(
-                    stepNumber: '3',
+                  IconSectionCard(
+                    icon: Icons.note_alt_outlined,
                     title: 'OPTIONAL',
                     children: [
                       const FieldLabel(label: 'NOTES', letterSpacing: 0),

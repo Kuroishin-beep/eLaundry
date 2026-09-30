@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/themes/theme.dart';
 import '../../../../models/catalog_models.dart';
 import '../../../../shared/field_label.dart';
-import '../widgets/catalog_section_card.dart';
+import '../widgets/icon_section_card.dart';
 import 'edit_category_screen.dart';
-import 'edit_discount_screen.dart';
 
 class CategoryDetailsScreen extends StatefulWidget {
   final CatalogCategory category;
@@ -37,11 +36,9 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _currentCategory.isDiscount
-                      ? 'Delete Discount?'
-                      : 'Delete Category?',
-                  style: const TextStyle(
+                const Text(
+                  'Delete Category?',
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF2C2D2D),
@@ -116,10 +113,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
     final updated = await Navigator.of(context).push<CatalogCategory>(
       MaterialPageRoute(
         builder:
-            (context) =>
-                _currentCategory.isDiscount
-                    ? EditDiscountScreen(categoryToEdit: _currentCategory)
-                    : EditCategoryScreen(categoryToEdit: _currentCategory),
+            (context) => EditCategoryScreen(categoryToEdit: _currentCategory),
       ),
     );
 
@@ -140,9 +134,9 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
     return Scaffold(
       backgroundColor: pageBgColor,
       appBar: AppBar(
-        title: Text(
-          _currentCategory.isDiscount ? 'Discount Details' : 'Category Details',
-          style: const TextStyle(
+        title: const Text(
+          'Category Details',
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: Color(0xFF222423),
@@ -174,35 +168,29 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
             ),
             itemBuilder:
                 (context) => [
-                  PopupMenuItem(
+                  const PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_outlined, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          _currentCategory.isDiscount
-                              ? 'Edit Discount'
-                              : 'Edit Category',
-                        ),
+                        Icon(Icons.edit_outlined, size: 18),
+                        SizedBox(width: 8),
+                        Text('Edit Category'),
                       ],
                     ),
                   ),
-                  PopupMenuItem(
+                  const PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.delete_outline,
                           size: 18,
                           color: AppColors.accent,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
-                          _currentCategory.isDiscount
-                              ? 'Delete Discount'
-                              : 'Delete Category',
-                          style: const TextStyle(color: AppColors.accent),
+                          'Delete Category',
+                          style: TextStyle(color: AppColors.accent),
                         ),
                       ],
                     ),
@@ -277,89 +265,42 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // --- 1. BASIC INFORMATION ---
-                  CatalogSectionCard(
-                    stepNumber: '1',
+                  IconSectionCard(
+                    icon: Icons.category_rounded,
                     title: 'BASIC INFORMATION',
                     children: [
-                      FieldLabel(
-                        label:
-                            _currentCategory.isDiscount
-                                ? 'DISCOUNT NAME'
-                                : 'CATEGORY NAME',
+                      const FieldLabel(
+                        label: 'CATEGORY NAME',
                         letterSpacing: 0,
                       ),
                       _ReadOnlyFieldBox(
-                        icon: Icons.title_rounded,
+                        icon: Icons.label_outline_rounded,
                         value:
                             _currentCategory.name.isEmpty
                                 ? 'None'
                                 : _currentCategory.name,
                       ),
-                      const SizedBox(height: 14),
-                      const FieldLabel(label: 'TYPE', letterSpacing: 0),
-                      _ReadOnlyFieldBox(
-                        icon: Icons.loyalty_outlined,
-                        value:
-                            _currentCategory.isDiscount
-                                ? 'Discount / Voucher'
-                                : 'Item Category',
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // --- 2. SPECIFICATIONS / CONDITIONS ---
-                  CatalogSectionCard(
-                    stepNumber: '2',
-                    title:
-                        _currentCategory.isDiscount
-                            ? 'SCOPE & CONDITIONS'
-                            : 'INVENTORY & DETAILS',
+                  // --- 2. INVENTORY & DETAILS ---
+                  IconSectionCard(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'INVENTORY & DETAILS',
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const FieldLabel(
-                                  label: 'QUANTITY',
-                                  letterSpacing: 0,
-                                ),
-                                _ReadOnlyFieldBox(
-                                  icon: Icons.dialpad_rounded,
-                                  value: '${_currentCategory.quantity}',
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_currentCategory.isDiscount) ...[
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const FieldLabel(
-                                    label: 'MIN SPEND',
-                                    letterSpacing: 0,
-                                  ),
-                                  _ReadOnlyFieldBox(
-                                    icon: Icons.sell_outlined,
-                                    value: _currentCategory.minSpend ?? '₱0.00',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
+                      const FieldLabel(label: 'QUANTITY', letterSpacing: 0),
+                      _ReadOnlyFieldBox(
+                        icon: Icons.dialpad_rounded,
+                        value: '${_currentCategory.quantity}',
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   // --- 3. OPTIONAL ---
-                  CatalogSectionCard(
-                    stepNumber: '3',
+                  IconSectionCard(
+                    icon: Icons.note_alt_outlined,
                     title: 'OPTIONAL',
                     children: [
                       const FieldLabel(label: 'NOTES', letterSpacing: 0),
@@ -397,11 +338,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
 }
 
 class _ReadOnlyFieldBox extends StatelessWidget {
-  final IconData? icon;
-  final Widget? iconWidget;
+  final IconData icon;
   final String value;
 
-  const _ReadOnlyFieldBox({this.icon, this.iconWidget, required this.value});
+  const _ReadOnlyFieldBox({required this.icon, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +355,7 @@ class _ReadOnlyFieldBox extends StatelessWidget {
       ),
       child: Row(
         children: [
-          iconWidget ?? Icon(icon, size: 20, color: AppColors.secondary[600]),
+          Icon(icon, size: 20, color: AppColors.secondary[600]),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
