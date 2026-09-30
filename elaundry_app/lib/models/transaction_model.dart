@@ -21,7 +21,7 @@ class TransactionModel {
     required this.time,
     required this.baskets,
     required this.items,
-    this.discount = 100.0,
+    this.discount = 0.0,
     required this.paymentMethod,
     required this.processedByName,
     required this.processedByRole,

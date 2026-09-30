@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/order_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/order_models.dart';
 import '../../shared/input_decoration.dart';
@@ -16,66 +17,36 @@ class OrderDetailsScreen extends StatefulWidget {
 }
 
 class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
+  final OrderController _orderController = OrderController();
   late LaundryOrder _order;
   final List<TextEditingController> _basketControllers = [];
-
-  // Catalog catalogue available to add
-  final List<OrderLineItem> _availableServices = const [
-    OrderLineItem(
-      id: 's1',
-      name: 'Regular Wash',
-      tier: 'STANDARD',
-      duration: '38 mins',
-      price: 80,
-      isService: true,
-    ),
-    OrderLineItem(
-      id: 's2',
-      name: 'Regular Dry',
-      tier: 'STANDARD',
-      duration: '40 mins',
-      price: 80,
-      isService: true,
-    ),
-    OrderLineItem(
-      id: 's3',
-      name: 'Premium Full Service',
-      tier: 'PLUS+',
-      duration: '48 mins',
-      price: 220,
-      isService: true,
-    ),
-  ];
-
-  final List<OrderLineItem> _availableAddons = const [
-    OrderLineItem(
-      id: 'a1',
-      name: 'Fabric Softener',
-      tier: 'STANDARD',
-      price: 10,
-      isService: false,
-    ),
-    OrderLineItem(
-      id: 'a2',
-      name: 'Plastic Bag',
-      tier: 'STANDARD',
-      price: 5,
-      isService: false,
-    ),
-    OrderLineItem(
-      id: 'a3',
-      name: 'Detergent',
-      tier: 'PLUS+',
-      price: 30,
-      isService: false,
-    ),
-  ];
+  List<OrderLineItem> _availableItems = [];
+  bool _isLoadingCatalog = true;
+  Object? _catalogError;
 
   @override
   void initState() {
     super.initState();
     _order = widget.order;
     _initBasketControllers();
+    _loadCatalogItems();
+  }
+
+  Future<void> _loadCatalogItems() async {
+    try {
+      final items = await _orderController.getOrderableItems();
+      if (!mounted) return;
+      setState(() {
+        _availableItems = items;
+        _isLoadingCatalog = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _catalogError = error;
+        _isLoadingCatalog = false;
+      });
+    }
   }
 
   void _initBasketControllers() {
@@ -124,7 +95,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Delete Order?',
+                    'Cancel Order?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -133,7 +104,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Are you sure you want to delete order ${_order.id} for ${_order.customerName}? This action cannot be undone.',
+                    'Are you sure you want to cancel order ${_order.id} for ${_order.customerName}?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12.5,
@@ -177,9 +148,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.of(dialogCtx).pop();
-                              Navigator.of(context).pop(
-                                'paid',
-                              ); // Clears this order from the orders list
+                              Navigator.of(context).pop('cancelled');
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.accent,
@@ -190,7 +159,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                               ),
                             ),
                             child: const Text(
-                              'Delete',
+                              'Cancel Order',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -252,7 +221,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   }
 
   void _openAddItemModal({required bool isService}) {
-    final catalogList = isService ? _availableServices : _availableAddons;
+    final catalogList =
+        _availableItems.where((item) => item.isService == isService).toList();
 
     showModalBottomSheet(
       context: context,
@@ -287,65 +257,90 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 ),
                 const Divider(height: 1),
                 const SizedBox(height: 8),
-                ...catalogList.map((avail) {
-                  final existing = _order.items.any(
-                    (i) => i.name == avail.name,
-                  );
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      avail.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
-                      ),
+                if (_isLoadingCatalog)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_catalogError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'Unable to load catalog: $_catalogError',
+                      textAlign: TextAlign.center,
                     ),
-                    subtitle: Text(
-                      'P${avail.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: AppColors.accent,
-                        fontSize: 12,
-                      ),
+                  )
+                else if (catalogList.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      isService
+                          ? 'No services are available in the catalog.'
+                          : 'No add-ons are available in the catalog.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.secondary[500]),
                     ),
-                    trailing: ElevatedButton(
-                      onPressed: () {
-                        _syncBasketWeights();
-                        setState(() {
-                          final currentList = List<OrderLineItem>.from(
-                            _order.items,
-                          );
-                          final idx = currentList.indexWhere(
-                            (i) => i.name == avail.name,
-                          );
-                          if (idx != -1) {
-                            currentList[idx] = currentList[idx].copyWith(
-                              quantity: currentList[idx].quantity + 1,
-                            );
-                          } else {
-                            currentList.add(avail.copyWith(quantity: 1));
-                          }
-                          _order = _order.copyWith(items: currentList);
-                        });
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        minimumSize: const Size(60, 30),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: Text(
-                        existing ? '+1 More' : 'Add',
+                  )
+                else
+                  ...catalogList.map((avail) {
+                    final existing = _order.items.any(
+                      (item) => item.id == avail.id,
+                    );
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        avail.name,
                         style: const TextStyle(
-                          fontSize: 11.5,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13.5,
                         ),
                       ),
-                    ),
-                  );
-                }),
+                      subtitle: Text(
+                        'P${avail.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 12,
+                        ),
+                      ),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          _syncBasketWeights();
+                          setState(() {
+                            final currentList = List<OrderLineItem>.from(
+                              _order.items,
+                            );
+                            final index = currentList.indexWhere(
+                              (item) => item.id == avail.id,
+                            );
+                            if (index != -1) {
+                              currentList[index] = currentList[index].copyWith(
+                                quantity: currentList[index].quantity + 1,
+                              );
+                            } else {
+                              currentList.add(avail.copyWith(quantity: 1));
+                            }
+                            _order = _order.copyWith(items: currentList);
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          minimumSize: const Size(60, 30),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: Text(
+                          existing ? '+1 More' : 'Add',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
               ],
             ),
           ),
@@ -435,7 +430,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Delete Order',
+                          'Cancel Order',
                           style: TextStyle(
                             color: AppColors.accent,
                             fontWeight: FontWeight.w600,

@@ -76,7 +76,7 @@ class MachineCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  item.tier,
+                  item.tier.toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 9.5,

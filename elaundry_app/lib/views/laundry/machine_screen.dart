@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/machine_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/machine_model.dart';
+import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
 import 'machine_card.dart';
@@ -208,108 +209,92 @@ class _MachinesScreenState extends State<MachinesScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // Action Bar (Filter status + Add Machine)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Active filter chip indicator
-                    if (_selectedFilter != 'All')
-                      Chip(
-                        label: Text(
-                          _selectedFilter,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
-                        deleteIcon: const Icon(
-                          Icons.close_rounded,
-                          size: 14,
-                          color: Colors.white,
-                        ),
-                        onDeleted:
-                            () => setState(() => _selectedFilter = 'All'),
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      )
-                    else
-                      const SizedBox.shrink(),
-
-                    const Spacer(),
-
-                    ElevatedButton.icon(
-                      onPressed: _navigateToAddMachine,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text(
-                        'Add Machine',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Machine Grid
                 StreamBuilder<List<MachineItem>>(
                   stream: _machinesStream,
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Text(
-                          'Unable to load machines: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.secondary[600]),
-                        ),
+                      return Column(
+                        children: [
+                          _buildMachineActionBar(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              'Unable to load machines: ${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.secondary[600]),
+                            ),
+                          ),
+                        ],
                       );
                     }
                     if (!snapshot.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
-                        child: Center(child: CircularProgressIndicator()),
+                      return Column(
+                        children: [
+                          _buildMachineActionBar(),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ],
                       );
                     }
 
+                    final allMachines = snapshot.data!;
                     final machines = _filteredMachines(snapshot.data!);
                     if (machines.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Center(
-                          child: Text(
-                            'No machines found.',
-                            style: TextStyle(color: AppColors.secondary[500]),
+                      final hasNoMachines = allMachines.isEmpty;
+                      return Column(
+                        children: [
+                          if (!hasNoMachines) _buildMachineActionBar(),
+                          SizedBox(
+                            height: 420,
+                            child: Center(
+                              child: EmptyState(
+                                icon: Icons.local_laundry_service_outlined,
+                                title:
+                                    hasNoMachines
+                                        ? 'No Machines Yet'
+                                        : 'No Matching Machines',
+                                description:
+                                    hasNoMachines
+                                        ? 'Add a machine to start managing your laundry equipment.'
+                                        : 'Try changing your search or filter.',
+                                actionLabel:
+                                    hasNoMachines ? 'Add Machine' : null,
+                                onAction:
+                                    hasNoMachines
+                                        ? _navigateToAddMachine
+                                        : null,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       );
                     }
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: machines.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 14,
-                            mainAxisSpacing: 14,
-                            childAspectRatio: 0.78,
-                          ),
-                      itemBuilder:
-                          (context, index) => MachineCard(
-                            item: machines[index],
-                            onTap: () => _openMachineDetails(machines[index]),
-                          ),
+                    return Column(
+                      children: [
+                        _buildMachineActionBar(),
+                        const SizedBox(height: 16),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: machines.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                childAspectRatio: 0.78,
+                              ),
+                          itemBuilder:
+                              (context, index) => MachineCard(
+                                item: machines[index],
+                                onTap:
+                                    () => _openMachineDetails(machines[index]),
+                              ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -318,6 +303,51 @@ class _MachinesScreenState extends State<MachinesScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMachineActionBar() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_selectedFilter != 'All')
+              Chip(
+                label: Text(
+                  _selectedFilter,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                ),
+                deleteIcon: const Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: Colors.white,
+                ),
+                onDeleted: () => setState(() => _selectedFilter = 'All'),
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              )
+            else
+              const SizedBox.shrink(),
+            const Spacer(),
+            ElevatedButton.icon(
+              onPressed: _navigateToAddMachine,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add Machine', style: TextStyle(fontSize: 13)),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -27,7 +27,7 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
 
   double get subtotal =>
       widget.selectedItems.fold(0.0, (s, i) => s + (i.price * i.quantity));
-  double get discount => 100.0;
+  double get discount => 0.0;
   double get total => (subtotal - discount).clamp(0.0, double.infinity);
 
   @override

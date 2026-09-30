@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/shift_model.dart';
+import '../../../shared/empty_states.dart';
 
 class ManageShiftSubview extends StatelessWidget {
   final List<ShiftModel> activeShifts;
@@ -20,47 +21,50 @@ class ManageShiftSubview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // "Open New Shift" Button
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: onOpenNewShift,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(0, 48),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        if (activeShifts.isEmpty)
+          SizedBox(
+            height: 460,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.chat_bubble_outline_rounded,
+                title: 'No Active Shift',
+                description:
+                    'Open a shift to start recording orders and tracking cash flow.',
+                actionLabel: 'Open Shift',
+                onAction: onOpenNewShift,
               ),
             ),
-            child: const Text('Open New Shift', style: TextStyle(fontSize: 13)),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // Active header
-        Text(
-          'Active (${activeShifts.length})',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF555B5A),
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // Active Shift Cards List
-        if (activeShifts.isEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            alignment: Alignment.center,
-            child: Text(
-              'No active shifts. Open a new shift to start.',
-              style: TextStyle(color: AppColors.secondary[500], fontSize: 13),
-            ),
           )
-        else
+        else ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: onOpenNewShift,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Open New Shift',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Active (${activeShifts.length})',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF555B5A),
+            ),
+          ),
+          const SizedBox(height: 10),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -149,6 +153,7 @@ class ManageShiftSubview extends StatelessWidget {
               );
             },
           ),
+        ],
       ],
     );
   }

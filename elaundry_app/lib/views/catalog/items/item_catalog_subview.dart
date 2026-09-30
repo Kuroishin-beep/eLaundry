@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/catalog_models.dart';
+import '../../../shared/empty_states.dart';
 
 class ItemCatalogSubview extends StatelessWidget {
   final List<CatalogItem> items;
@@ -22,25 +23,41 @@ class ItemCatalogSubview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton.icon(
-            onPressed: onAddItem,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(0, 48),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        if (items.isNotEmpty) ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: onAddItem,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add Item', style: TextStyle(fontSize: 13)),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+        if (items.isEmpty)
+          SizedBox(
+            height: 360,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.sell_outlined,
+                title: 'No Items Yet',
+                description:
+                    'Add an item to start building your laundry catalog.',
+                actionLabel: 'Add Item',
+                onAction: onAddItem,
               ),
             ),
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Add Item', style: TextStyle(fontSize: 13)),
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (isGridView)
+          )
+        else if (isGridView)
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -135,8 +152,13 @@ class _ItemListCard extends StatelessWidget {
                           label: item.serviceType,
                           color: const Color(0xFF86A8A4),
                         ),
-                        const SizedBox(width: 6),
-                        _ItemTag(label: item.tier, color: AppColors.accent),
+                        if (item.machineType.trim().isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          _ItemTag(
+                            label: item.machineType.toUpperCase(),
+                            color: AppColors.accent,
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -220,6 +242,10 @@ class _ItemGridCard extends StatelessWidget {
             item.name,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
+          if (item.machineType.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _ItemTag(label: item.machineType, color: AppColors.accent),
+          ],
           Text(
             item.priceLabel,
             style: const TextStyle(

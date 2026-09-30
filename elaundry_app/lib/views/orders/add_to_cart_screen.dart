@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/order_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/order_models.dart';
 import '../../shared/input_decoration.dart';
@@ -15,93 +16,40 @@ class AddToCartScreen extends StatefulWidget {
 }
 
 class _AddToCartScreenState extends State<AddToCartScreen> {
+  final OrderController _orderController = OrderController();
   final _searchController = TextEditingController();
   bool _isGridView = false;
+  bool _isLoadingCatalog = true;
+  Object? _catalogError;
 
   final List<BasketItem> _baskets = [const BasketItem(number: 1, weight: 0)];
   final List<TextEditingController> _basketControllers = [];
-
-  final List<OrderLineItem> _availableItems = [
-    const OrderLineItem(
-      id: 's1',
-      name: 'Regular Full Service',
-      tier: 'STANDARD',
-      duration: 'Wash: 38 mins | Dry: 40 mins',
-      price: 200,
-      isService: true,
-    ),
-    const OrderLineItem(
-      id: 's2',
-      name: 'Premium Full Service',
-      tier: 'STANDARD',
-      duration: 'Wash: 48 mins | Dry: 50 mins',
-      price: 220,
-      isService: true,
-    ),
-    const OrderLineItem(
-      id: 's3',
-      name: 'Regular Full Service',
-      tier: 'PLUS+',
-      duration: 'Wash: 38 mins | Dry: 40 mins',
-      price: 350,
-      isService: true,
-    ),
-    const OrderLineItem(
-      id: 's4',
-      name: 'Premium Full Service',
-      tier: 'PLUS+',
-      duration: 'Wash: 48 mins | Dry: 50 mins',
-      price: 370,
-      isService: true,
-    ),
-    const OrderLineItem(
-      id: 'a1',
-      name: 'Fold',
-      tier: 'STANDARD',
-      price: 40,
-      isService: false,
-    ),
-    const OrderLineItem(
-      id: 'a2',
-      name: 'Fold',
-      tier: 'PLUS+',
-      price: 60,
-      isService: false,
-    ),
-    const OrderLineItem(
-      id: 'a3',
-      name: 'Fabric Softener',
-      tier: 'PLUS+',
-      price: 15,
-      isService: false,
-    ),
-    const OrderLineItem(
-      id: 'a4',
-      name: 'Detergent',
-      tier: 'PLUS+',
-      price: 30,
-      isService: false,
-    ),
-    const OrderLineItem(
-      id: 'a5',
-      name: 'Plastic Bag',
-      tier: 'STANDARD',
-      price: 5,
-      isService: false,
-    ),
-    const OrderLineItem(
-      id: 'a6',
-      name: 'Plastic Bag',
-      tier: 'PLUS+',
-      price: 10,
-      isService: false,
-    ),
-  ];
+  final List<OrderLineItem> _availableItems = [];
 
   @override
   void initState() {
     super.initState();
     _basketControllers.add(TextEditingController(text: ''));
+    _loadCatalogItems();
+  }
+
+  Future<void> _loadCatalogItems() async {
+    try {
+      final items = await _orderController.getOrderableItems();
+      if (!mounted) return;
+      setState(() {
+        _availableItems
+          ..clear()
+          ..addAll(items);
+        _isLoadingCatalog = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _catalogError = error;
+        _isLoadingCatalog = false;
+      });
+    }
   }
 
   @override
@@ -336,29 +284,54 @@ class _AddToCartScreenState extends State<AddToCartScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // 2. SERVICES (List vs Grid)
-                  IconSectionCard(
-                    icon: Icons.local_laundry_service_outlined,
-                    title: 'SERVICES',
-                    children: [
-                      _isGridView
-                          ? _buildGridItems(services)
-                          : _buildListItems(services),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                  if (_isLoadingCatalog)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_catalogError != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(
+                        'Unable to load catalog items: $_catalogError',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.secondary[600]),
+                      ),
+                    )
+                  else if (_availableItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(
+                        'No catalog items are available to order.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.secondary[500]),
+                      ),
+                    )
+                  else ...[
+                    // 2. SERVICES (List vs Grid)
+                    IconSectionCard(
+                      icon: Icons.local_laundry_service_outlined,
+                      title: 'SERVICES',
+                      children: [
+                        _isGridView
+                            ? _buildGridItems(services)
+                            : _buildListItems(services),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
 
-                  // 3. ADD-ONS (List vs Grid)
-                  IconSectionCard(
-                    icon: Icons.add_circle_outline_rounded,
-                    title: 'ADD-ONS',
-                    children: [
-                      _isGridView
-                          ? _buildGridItems(addons)
-                          : _buildListItems(addons),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                    // 3. ADD-ONS (List vs Grid)
+                    IconSectionCard(
+                      icon: Icons.add_circle_outline_rounded,
+                      title: 'ADD-ONS',
+                      children: [
+                        _isGridView
+                            ? _buildGridItems(addons)
+                            : _buildListItems(addons),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ],
               ),
             ),

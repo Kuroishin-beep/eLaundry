@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/shift_model.dart';
+import '../../../shared/empty_states.dart';
 import '../../../shared/search_filter_bar.dart';
 
 class ReportShiftSubview extends StatefulWidget {
@@ -57,6 +58,24 @@ class _ReportShiftSubviewState extends State<ReportShiftSubview> {
           hintText: 'Search',
         ),
         const SizedBox(height: 16),
+
+        if (filteredToday.isEmpty && filteredPast.isEmpty)
+          SizedBox(
+            height: 360,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title:
+                    widget.todayReports.isEmpty && widget.pastReports.isEmpty
+                        ? 'No Shift Reports'
+                        : 'No Matching Reports',
+                description:
+                    widget.todayReports.isEmpty && widget.pastReports.isEmpty
+                        ? 'Closed shifts will appear here.'
+                        : 'Try a different search term.',
+              ),
+            ),
+          ),
 
         // --- Today Section ---
         if (filteredToday.isNotEmpty) ...[

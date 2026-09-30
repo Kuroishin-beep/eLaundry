@@ -66,7 +66,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           isService: false,
         ),
       ],
-      discount: 100,
+      discount: 0,
       paymentMethod: 'CASH',
       processedByName: 'John Doe',
       processedByRole: 'Cashier',
