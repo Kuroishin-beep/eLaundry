@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/themes/theme.dart';
-import '../../../models/staff_model.dart';
+import '../../../models/employee_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
 import 'widgets/staff_section_card.dart';
 
 class EditStaffScreen extends StatefulWidget {
   final StaffMember? staffToEdit;
+  final List<RoleItem> availableRoles;
 
-  const EditStaffScreen({super.key, this.staffToEdit});
+  const EditStaffScreen({
+    super.key,
+    this.staffToEdit,
+    this.availableRoles = const [],
+  });
 
   @override
   State<EditStaffScreen> createState() => _EditStaffScreenState();
@@ -26,7 +31,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
   late final TextEditingController _contactController;
 
   String _selectedRole = 'Cashier';
-  final List<String> _roles = ['Cashier', 'Store Staff', 'Supervisor', 'Admin'];
+  late final List<String> _roles;
 
   bool get _isEditing => widget.staffToEdit != null;
 
@@ -34,6 +39,9 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
   void initState() {
     super.initState();
     final staff = widget.staffToEdit;
+    _roles = widget.availableRoles.map((role) => role.name).toList();
+    if (_roles.isEmpty && staff != null) _roles.add(staff.role);
+    if (_roles.isNotEmpty) _selectedRole = _roles.first;
     _nameController = TextEditingController(text: staff?.name ?? '');
     _noteController = TextEditingController(text: staff?.note ?? '');
     _pinController = TextEditingController(text: staff?.pin ?? '');
@@ -260,13 +268,13 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                         TextFormField(
                           controller: _pinController,
                           keyboardType: TextInputType.number,
-                          maxLength: 4,
+                          maxLength: 6,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           obscureText: true,
                           decoration: appInputDecoration(
-                            hintText: '••••',
+                            hintText: '••••••',
                             prefixIcon: const Icon(
                               Icons.dialpad_rounded,
                               size: 20,
@@ -274,9 +282,9 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                           ).copyWith(counterText: ''),
                           validator:
                               (val) =>
-                                  val != null && val.length == 4
+                                  val != null && val.length == 6
                                       ? null
-                                      : 'Requires a 4-digit PIN',
+                                      : 'Requires a 6-digit PIN',
                         ),
                       ],
                     ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/machine_model.dart';
 import '../models/store_model.dart';
+import '../services/store_context.dart';
 
 class MachineController {
   MachineController({FirebaseAuth? auth, FirebaseFirestore? firestore})
@@ -30,11 +31,12 @@ class MachineController {
   Future<void> createMachine(MachineItem machine) async {
     _validate(machine);
     final collection = await _machinesCollection();
+    final context = await _storeContext();
     final userId = currentUserId!;
     await collection.doc(machine.id).set({
       ..._toMap(machine),
       'userId': userId,
-      'storeId': userId,
+      'storeId': context.storeId,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -43,11 +45,12 @@ class MachineController {
   Future<void> updateMachine(MachineItem machine) async {
     _validate(machine);
     final collection = await _machinesCollection();
+    final context = await _storeContext();
     final userId = currentUserId!;
     await collection.doc(machine.id).set({
       ..._toMap(machine),
       'userId': userId,
-      'storeId': userId,
+      'storeId': context.storeId,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -62,21 +65,21 @@ class MachineController {
 
   Future<CollectionReference<Map<String, dynamic>>>
   _machinesCollection() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw StateError('A signed-in user is required to access machines.');
-    }
+    final context = await _storeContext();
 
-    final storeReference = _firestore.collection('stores').doc(userId);
+    final storeReference = _firestore.collection('stores').doc(context.storeId);
     final storeSnapshot = await storeReference.get();
     if (!storeSnapshot.exists) {
       await storeReference.set(
-        StoreModel(id: userId).toMap(),
+        StoreModel(id: context.storeId).toMap(),
         SetOptions(merge: true),
       );
     }
     return storeReference.collection('machines');
   }
+
+  Future<StoreContext> _storeContext() =>
+      StoreContextResolver(firestore: _firestore, auth: _auth).resolve();
 
   void _validate(MachineItem machine) {
     if (machine.id.trim().isEmpty) {

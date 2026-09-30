@@ -21,9 +21,10 @@ class NewOrderSummaryScreen extends StatefulWidget {
 }
 
 class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
-  final _nameController = TextEditingController(text: 'Juan Dela Cruz');
-  final _contactController = TextEditingController(text: '+63 987 123 4560');
+  final _nameController = TextEditingController();
+  final _contactController = TextEditingController();
   String _paymentMethod = 'CASH';
+  final DateTime _createdAt = DateTime.now();
 
   double get subtotal =>
       widget.selectedItems.fold(0.0, (s, i) => s + (i.price * i.quantity));
@@ -39,20 +40,41 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
 
   void _addToOrder() {
     final order = LaundryOrder(
-      id: '#123456',
-      customerName:
-          _nameController.text.trim().isEmpty
-              ? 'Guest'
-              : _nameController.text.trim(),
+      id: '',
+      customerName: _nameController.text.trim(),
       contactNumber: _contactController.text.trim(),
-      dateTime: 'August 21, 2026 • 10:00 AM',
-      time: '10:00 AM',
+      dateTime: _formatDateTime(_createdAt),
+      time: _formatTime(_createdAt),
       baskets: widget.baskets,
       items: widget.selectedItems,
       discount: discount,
       paymentMethod: _paymentMethod,
     );
     Navigator.of(context).pop(order);
+  }
+
+  String _formatDateTime(DateTime value) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[value.month - 1]} ${value.day}, ${value.year} • ${_formatTime(value)}';
+  }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute ${value.hour >= 12 ? 'PM' : 'AM'}';
   }
 
   @override
@@ -67,7 +89,7 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
         title: Column(
           children: [
             const Text(
-              '#123456',
+              'New Order',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -75,7 +97,7 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
               ),
             ),
             Text(
-              'August 21, 2026 • 10:00 AM',
+              _formatDateTime(_createdAt),
               style: TextStyle(
                 fontSize: 11,
                 color: AppColors.secondary[500],
@@ -205,7 +227,7 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
                       TextFormField(
                         controller: _nameController,
                         decoration: appInputDecoration(
-                          hintText: 'Juan Dela Cruz',
+                          hintText: 'Enter customer name',
                           prefixIcon: const Icon(
                             Icons.person_outline_rounded,
                             size: 20,
@@ -220,7 +242,7 @@ class _NewOrderSummaryScreenState extends State<NewOrderSummaryScreen> {
                       TextFormField(
                         controller: _contactController,
                         decoration: appInputDecoration(
-                          hintText: '+63 987 123 4560',
+                          hintText: 'Enter contact number',
                           prefixIcon: const Icon(
                             Icons.phone_outlined,
                             size: 20,

@@ -19,6 +19,13 @@ class ShiftScreen extends StatefulWidget {
 class _ShiftScreenState extends State<ShiftScreen> {
   final ShiftController _shiftController = ShiftController();
   int _selectedTabIndex = 0;
+  late final Future<NavigationPermissions> _permissionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _permissionsFuture = NavigationPermissions.load();
+  }
 
   Future<void> _handleOpenNewShift() async {
     final startingCash = await Navigator.of(context).push<double>(
@@ -45,10 +52,8 @@ class _ShiftScreenState extends State<ShiftScreen> {
     final closedShift = await Navigator.of(context).push<ShiftModel>(
       MaterialPageRoute(
         builder:
-            (context) => ShiftDetailsScreen(
-              shift: shift,
-              controller: _shiftController,
-            ),
+            (context) =>
+                ShiftDetailsScreen(shift: shift, controller: _shiftController),
       ),
     );
     if (closedShift != null && mounted) {
@@ -87,93 +92,110 @@ class _ShiftScreenState extends State<ShiftScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: const LaundryNavigationFab(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: StreamBuilder<List<ShiftModel>>(
-              stream: _shiftController.watchShifts(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: Text(
-                      'Unable to load shifts: ${snapshot.error}',
-                      textAlign: TextAlign.center,
+      body: NavigationPermissionsBuilder(
+        future: _permissionsFuture,
+        builder: (context, permissions) => _buildBody(context, permissions),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, NavigationPermissions permissions) {
+    final canManage = permissions.shiftManagement;
+    final canReport = permissions.shiftReport;
+
+    if (!canManage && !canReport) {
+      return const Center(child: Text('You do not have shift access.'));
+    }
+    final selectedTabIndex = !canManage && canReport ? 1 : _selectedTabIndex;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: StreamBuilder<List<ShiftModel>>(
+            stream: _shiftController.watchShifts(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Text(
+                    'Unable to load shifts: ${snapshot.error}',
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final allShifts = snapshot.data!;
+              final activeShifts =
+                  allShifts.where((shift) => !shift.isClosed).toList();
+              final closedShifts =
+                  allShifts.where((shift) => shift.isClosed).toList();
+              final todayReports = closedShifts.where(_isToday).toList();
+              final pastReports =
+                  closedShifts.where((shift) => !_isToday(shift)).toList();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  );
-                }
-                if (!snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final allShifts = snapshot.data!;
-                final activeShifts =
-                    allShifts.where((shift) => !shift.isClosed).toList();
-                final closedShifts =
-                    allShifts.where((shift) => shift.isClosed).toList();
-                final todayReports =
-                    closedShifts.where(_isToday).toList();
-                final pastReports =
-                    closedShifts.where((shift) => !_isToday(shift)).toList();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          _tab('Manage', 0),
+                    child: Row(
+                      children: [
+                        if (canManage) _tab('Manage', 0, selectedTabIndex),
+                        if (canManage && canReport)
                           Container(
                             width: 1,
                             height: 24,
                             color: AppColors.neutral[400],
                           ),
-                          _tab('Report', 1),
-                        ],
-                      ),
+                        if (canReport) _tab('Report', 1, selectedTabIndex),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    _selectedTabIndex == 0
-                        ? ManageShiftSubview(
-                          activeShifts: activeShifts,
-                          shiftController: _shiftController,
-                          onOpenNewShift: _handleOpenNewShift,
-                          onShiftTap: _openShiftDetails,
-                        )
-                        : ReportShiftSubview(
-                          todayReports: todayReports,
-                          pastReports: pastReports,
-                          onReportTap: _openShiftDetails,
-                        ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                  const SizedBox(height: 16),
+                  selectedTabIndex == 0 && canManage
+                      ? ManageShiftSubview(
+                        activeShifts: activeShifts,
+                        shiftController: _shiftController,
+                        onOpenNewShift: _handleOpenNewShift,
+                        onShiftTap: _openShiftDetails,
+                      )
+                      : canReport
+                      ? ReportShiftSubview(
+                        todayReports: todayReports,
+                        pastReports: pastReports,
+                        onReportTap: _openShiftDetails,
+                      )
+                      : const SizedBox.shrink(),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _tab(String label, int index) {
-    final isSelected = _selectedTabIndex == index;
+  Widget _tab(String label, int index, int selectedTabIndex) {
+    final isSelected = selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedTabIndex = index),

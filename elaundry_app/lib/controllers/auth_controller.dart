@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import '../models/auth_model.dart';
+import '../services/store_context.dart';
 
 class AuthController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -39,6 +40,29 @@ class AuthController {
         profileImage: user.photoURL,
         createdAt: DateTime.now(),
       );
+    }
+
+    if (userModel.storeId == null) {
+      try {
+        final context =
+            await StoreContextResolver(
+              firestore: _firestore,
+              auth: _auth,
+            ).resolve();
+        userModel = UserModel(
+          id: userModel.id,
+          fullName: userModel.fullName,
+          email: userModel.email,
+          phone: userModel.phone,
+          profileImage: userModel.profileImage,
+          createdAt: userModel.createdAt,
+          storeId: context.storeId,
+          role: context.role,
+          permissions: context.permissions,
+        );
+      } on StateError {
+        // New owner accounts do not have a store document until first setup.
+      }
     }
 
     return AuthModel(

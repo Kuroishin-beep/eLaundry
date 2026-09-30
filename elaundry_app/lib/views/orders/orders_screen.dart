@@ -247,7 +247,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   )
                 else if (_activeShift == null)
                   SizedBox(
-                    height: 360,
+                    height: MediaQuery.sizeOf(context).height - 300,
                     child: Center(
                       child: EmptyState(
                         icon: Icons.lock_clock_outlined,
@@ -261,7 +261,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   )
                 else if (filtered.isEmpty)
                   SizedBox(
-                    height: 360,
+                    height: MediaQuery.sizeOf(context).height - 300,
                     child: Center(
                       child: EmptyState(
                         icon: Icons.receipt_long_outlined,

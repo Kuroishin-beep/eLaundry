@@ -247,7 +247,7 @@ class _MachinesScreenState extends State<MachinesScreen> {
                         children: [
                           if (!hasNoMachines) _buildMachineActionBar(),
                           SizedBox(
-                            height: 420,
+                            height: MediaQuery.sizeOf(context).height - 280,
                             child: Center(
                               child: EmptyState(
                                 icon: Icons.local_laundry_service_outlined,

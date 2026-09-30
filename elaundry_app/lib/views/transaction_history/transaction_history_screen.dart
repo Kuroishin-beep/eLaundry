@@ -71,9 +71,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     try {
       await _transactionController.markOrderUnpaid(tx.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
@@ -160,10 +158,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     ),
                   )
                 else if (filtered.isEmpty)
-                  const SizedBox(
-                    height: 360,
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height - 300,
                     child: Center(
-                      child: EmptyState(
+                      child: const EmptyState(
                         icon: Icons.receipt_long_outlined,
                         title: 'No Transactions Yet',
                         description:

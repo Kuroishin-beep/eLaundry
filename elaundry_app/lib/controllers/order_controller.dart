@@ -1,20 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/catalog_models.dart';
 import '../models/order_models.dart';
 import 'catalog_controller.dart';
 import 'shift_controller.dart';
+import '../services/store_context.dart';
 
 class OrderController {
   OrderController({
     FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
     CatalogController? catalogController,
     ShiftController? shiftController,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
        _catalogController = catalogController ?? CatalogController(),
        _shiftController = shiftController ?? ShiftController();
 
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
   final CatalogController _catalogController;
   final ShiftController _shiftController;
 
@@ -24,24 +29,28 @@ class OrderController {
   CollectionReference<Map<String, dynamic>> get _counters =>
       _firestore.collection('counters');
 
-  Stream<List<LaundryOrder>> watchOrders() => _orders.snapshots().map((
-    snapshot,
-  ) {
-    final orders =
-        snapshot.docs
-            .map(
-              (document) => LaundryOrder.fromMap(
-                document.data(),
-                documentId: document.id,
-              ),
-            )
-            .toList();
-    _sortNewestFirst(orders);
-    return orders;
-  });
+  Stream<List<LaundryOrder>> watchOrders() async* {
+    final storeId = await _storeId();
+    yield* _orders.where('store_id', isEqualTo: storeId).snapshots().map((
+      snapshot,
+    ) {
+      final orders =
+          snapshot.docs
+              .map(
+                (document) => LaundryOrder.fromMap(
+                  document.data(),
+                  documentId: document.id,
+                ),
+              )
+              .toList();
+      _sortNewestFirst(orders);
+      return orders;
+    });
+  }
 
   Future<List<LaundryOrder>> getOrders() async {
-    final snapshot = await _orders.get();
+    final snapshot =
+        await _orders.where('store_id', isEqualTo: await _storeId()).get();
     final orders =
         snapshot.docs
             .map(
@@ -121,7 +130,10 @@ class OrderController {
       );
 
       transaction.set(counterReference, {'sequence': sequence});
-      transaction.set(_orders.doc(orderId), createdOrder.toMap());
+      transaction.set(_orders.doc(orderId), {
+        ...createdOrder.toMap(),
+        'store_id': await _storeId(),
+      });
     });
 
     return createdOrder;
@@ -136,9 +148,19 @@ class OrderController {
       baskets: _basketsWithAddOns(order),
       shiftId: activeShift.id,
     );
-    await _orders
-        .doc(order.id)
-        .set(orderWithBasketAddOns.toMap(), SetOptions(merge: true));
+    await _orders.doc(order.id).set({
+      ...orderWithBasketAddOns.toMap(),
+      'store_id': await _storeId(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<String> _storeId() async {
+    final context =
+        await StoreContextResolver(
+          firestore: _firestore,
+          auth: _auth,
+        ).resolve();
+    return context.storeId;
   }
 
   Future<void> markOrderPaid(LaundryOrder order) =>

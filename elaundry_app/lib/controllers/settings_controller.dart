@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/store_model.dart';
 import '../models/user_model.dart';
+import '../services/store_context.dart';
 
 class SettingsController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -34,19 +35,28 @@ class SettingsController {
     final uid = currentUserId;
     if (uid == null) throw Exception('No user logged in.');
 
-    final doc = await _firestore.collection('stores').doc(uid).get();
+    final storeId =
+        (await StoreContextResolver(
+              firestore: _firestore,
+              auth: _auth,
+            ).resolve())
+            .storeId;
+    final doc = await _firestore.collection('stores').doc(storeId).get();
     if (!doc.exists || doc.data() == null) {
       final initialStore = StoreModel(
-        id: uid,
+        id: storeId,
         storeName: '',
         address: '',
         pin: '',
         notificationsEnabled: true,
       );
-      await _firestore.collection('stores').doc(uid).set(initialStore.toMap());
+      await _firestore
+          .collection('stores')
+          .doc(storeId)
+          .set(initialStore.toMap());
       return initialStore;
     }
-    return StoreModel.fromMap(doc.data()!, uid);
+    return StoreModel.fromMap(doc.data()!, storeId);
   }
 
   /// Update Account Name
@@ -94,7 +104,13 @@ class SettingsController {
 
     await _firestore
         .collection('stores')
-        .doc(uid)
+        .doc(
+          (await StoreContextResolver(
+                firestore: _firestore,
+                auth: _auth,
+              ).resolve())
+              .storeId,
+        )
         .set(updates, SetOptions(merge: true));
   }
 }

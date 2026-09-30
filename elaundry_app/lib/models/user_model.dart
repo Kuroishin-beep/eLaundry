@@ -1,3 +1,5 @@
+import 'employee_models.dart';
+
 class UserModel {
   final String id;
   final String fullName;
@@ -5,6 +7,9 @@ class UserModel {
   final String? phone;
   final String? profileImage;
   final DateTime? createdAt;
+  final String? storeId;
+  final String? role;
+  final RolePermissions permissions;
 
   UserModel({
     required this.id,
@@ -13,6 +18,9 @@ class UserModel {
     this.phone,
     this.profileImage,
     this.createdAt,
+    this.storeId,
+    this.role,
+    this.permissions = const RolePermissions(),
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +31,9 @@ class UserModel {
       'phone': phone,
       'profileImage': profileImage,
       'createdAt': createdAt?.toIso8601String(),
+      'storeId': storeId,
+      'role': role,
+      'role_permissions': permissions.toMap(),
     };
   }
 
@@ -35,6 +46,11 @@ class UserModel {
       profileImage: map['profileImage'],
       createdAt:
           map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
+      storeId: map['storeId'] as String?,
+      role: map['role'] as String?,
+      permissions: RolePermissions.fromMap(
+        map['role_permissions'] as Map<String, dynamic>?,
+      ),
     );
   }
 }

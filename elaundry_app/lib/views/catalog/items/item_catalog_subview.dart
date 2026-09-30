@@ -45,7 +45,7 @@ class ItemCatalogSubview extends StatelessWidget {
         ],
         if (items.isEmpty)
           SizedBox(
-            height: 360,
+            height: MediaQuery.sizeOf(context).height - 280,
             child: Center(
               child: EmptyState(
                 icon: Icons.sell_outlined,

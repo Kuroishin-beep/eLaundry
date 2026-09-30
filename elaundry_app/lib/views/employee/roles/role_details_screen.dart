@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
-import '../../../models/role_model.dart';
+import '../../../models/employee_models.dart';
 import '../../../shared/detail_value_box.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/section_card.dart';
@@ -356,8 +356,8 @@ class _RoleDetailsScreenState extends State<RoleDetailsScreen> {
                         border: Border.all(color: const Color(0xFFC7CFCE)),
                       ),
                       child: Text(
-                        _currentRole.description.isEmpty
-                            ? 'No description provided.'
+                        _currentRole.description.trim().isEmpty
+                            ? 'No description'
                             : _currentRole.description,
                         style: TextStyle(
                           color:

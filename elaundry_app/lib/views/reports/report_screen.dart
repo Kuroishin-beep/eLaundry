@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
+import '../../controllers/report_controller.dart';
+import '../../models/report_model.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../catalog/widgets/icon_section_card.dart';
 
@@ -16,37 +20,75 @@ class _ReportScreenState extends State<ReportScreen> {
   // 0: Today, 1: Weekly, 2: Monthly
   int _selectedTimeframe = 2;
 
-  // Mock metric dynamic data depending on timeframe
-  int get _totalOrders =>
-      _selectedTimeframe == 0 ? 14 : (_selectedTimeframe == 1 ? 48 : 67);
-  double get _netSales =>
-      _selectedTimeframe == 0
-          ? 4250.00
-          : (_selectedTimeframe == 1 ? 14890.00 : 20052.00);
-  double get _grossSales =>
-      _selectedTimeframe == 0
-          ? 5100.00
-          : (_selectedTimeframe == 1 ? 18320.00 : 25670.00);
+  final ReportController _reportController = ReportController();
+  StreamSubscription<ReportSummary>? _reportSubscription;
+  ReportSummary _report = ReportSummary(
+    id: 'monthly',
+    timeframe: 'monthly',
+    generatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  );
 
-  // Breakdown percentages
-  double get _cashPct => _selectedTimeframe == 0 ? 60 : 67;
-  double get _cashlessPct => 100 - _cashPct;
-
-  // Category counts
-  double get _servicesCount =>
-      _selectedTimeframe == 0 ? 18 : (_selectedTimeframe == 1 ? 45 : 72);
-  double get _addonsCount =>
-      _selectedTimeframe == 0 ? 8 : (_selectedTimeframe == 1 ? 22 : 30);
-  double get _othersCount =>
-      _selectedTimeframe == 0 ? 12 : (_selectedTimeframe == 1 ? 34 : 54);
+  int get _totalOrders => _report.totalOrders;
+  double get _netSales => _report.netSales;
+  double get _grossSales => _report.grossSales;
+  double get _cashPct => _report.cashPercentage;
+  double get _cashlessPct => _report.cashlessPercentage;
+  double get _servicesCount => _report.servicesCount;
+  double get _addonsCount => _report.addonsCount;
+  double get _othersCount => _report.othersCount;
 
   String _selectedDonutMetric = 'Payment Method';
 
-  final List<Map<String, dynamic>> _employeeStats = [
-    {'name': 'Juan D.', 'pct': 45.0, 'color': const Color(0xFF005B52)},
-    {'name': 'Maria S.', 'pct': 35.0, 'color': const Color(0xFF388E83)},
-    {'name': 'John D.', 'pct': 20.0, 'color': const Color(0xFF7FA8A2)},
-  ];
+  List<Map<String, dynamic>> get _employeeStats =>
+      _report.employeeStats.asMap().entries.map((entry) {
+        const colors = [
+          Color(0xFF005B52),
+          Color(0xFF388E83),
+          Color(0xFF7FA8A2),
+        ];
+        return {
+          'name': entry.value.name,
+          'pct': entry.value.percentage,
+          'color': colors[entry.key % colors.length],
+        };
+      }).toList();
+
+  String get _timeframe =>
+      const ['today', 'weekly', 'monthly'][_selectedTimeframe];
+
+  @override
+  void initState() {
+    super.initState();
+    _watchReport();
+  }
+
+  void _watchReport() {
+    _reportSubscription?.cancel();
+    _reportSubscription = _reportController
+        .watchReport(_timeframe)
+        .listen(
+          (report) {
+            if (mounted) setState(() => _report = report);
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+                  content: Text('Unable to load report: $error'),
+                ),
+              );
+            }
+          },
+        );
+  }
+
+  @override
+  void dispose() {
+    _reportSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -526,7 +568,10 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildTimeframeBtn({required String label, required int index}) {
     final isSelected = _selectedTimeframe == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedTimeframe = index),
+      onTap: () {
+        setState(() => _selectedTimeframe = index);
+        _watchReport();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),

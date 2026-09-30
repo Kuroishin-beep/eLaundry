@@ -4,16 +4,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/order_models.dart';
 import '../models/transaction_model.dart';
 import 'shift_controller.dart';
+import '../services/store_context.dart';
 
 class TransactionController {
   TransactionController({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     ShiftController? shiftController,
-  })
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance,
-      _shiftController = shiftController ?? ShiftController();
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _shiftController = shiftController ?? ShiftController();
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -22,23 +22,41 @@ class TransactionController {
   CollectionReference<Map<String, dynamic>> get _orders =>
       _firestore.collection('orders');
 
-  Stream<List<TransactionModel>> watchTransactions() => _orders
-      .where('order_status', isEqualTo: 'paid')
-      .snapshots()
-      .map((snapshot) {
-        final transactions = snapshot.docs.map(_fromOrderDocument).toList();
-        transactions.sort((left, right) {
-          final leftDate = DateTime.tryParse(left.dateTime);
-          final rightDate = DateTime.tryParse(right.dateTime);
-          if (leftDate == null || rightDate == null) return 0;
-          return rightDate.compareTo(leftDate);
+  Stream<List<TransactionModel>> watchTransactions() async* {
+    final storeId =
+        (await StoreContextResolver(
+              firestore: _firestore,
+              auth: _auth,
+            ).resolve())
+            .storeId;
+    yield* _orders
+        .where('store_id', isEqualTo: storeId)
+        .where('order_status', isEqualTo: 'paid')
+        .snapshots()
+        .map((snapshot) {
+          final transactions = snapshot.docs.map(_fromOrderDocument).toList();
+          transactions.sort((left, right) {
+            final leftDate = DateTime.tryParse(left.dateTime);
+            final rightDate = DateTime.tryParse(right.dateTime);
+            if (leftDate == null || rightDate == null) return 0;
+            return rightDate.compareTo(leftDate);
+          });
+          return transactions;
         });
-        return transactions;
-      });
+  }
 
   Future<List<TransactionModel>> getTransactions() async {
+    final storeId =
+        (await StoreContextResolver(
+              firestore: _firestore,
+              auth: _auth,
+            ).resolve())
+            .storeId;
     final snapshot =
-        await _orders.where('order_status', isEqualTo: 'paid').get();
+        await _orders
+            .where('store_id', isEqualTo: storeId)
+            .where('order_status', isEqualTo: 'paid')
+            .get();
     return snapshot.docs.map(_fromOrderDocument).toList();
   }
 

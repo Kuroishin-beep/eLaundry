@@ -29,12 +29,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
   bool _isGridView = false;
   late Stream<List<CatalogItem>> _itemsStream;
   late Stream<List<CatalogCategory>> _categoriesStream;
+  late final Future<NavigationPermissions> _permissionsFuture;
 
   @override
   void initState() {
     super.initState();
     _itemsStream = _catalogController.watchItems();
     _categoriesStream = _catalogController.watchCategoriesAndDiscounts();
+    _permissionsFuture = NavigationPermissions.load();
   }
 
   @override
@@ -162,9 +164,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   void _showError(Object error) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
@@ -207,37 +207,56 @@ class _CatalogScreenState extends State<CatalogScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: const LaundryNavigationFab(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Segmented Switcher (Item | Category)
-                Container(
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
+      body: NavigationPermissionsBuilder(
+        future: _permissionsFuture,
+        builder: (context, permissions) => _buildBody(context, permissions),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, NavigationPermissions permissions) {
+    final canManageItems = permissions.manageItems;
+    final canManageCategories = permissions.manageCategory;
+
+    if (!canManageItems && !canManageCategories) {
+      return const Center(child: Text('You do not have catalog access.'));
+    }
+
+    final selectedTabIndex =
+        !canManageItems && canManageCategories ? 1 : _selectedTabIndex;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Segmented Switcher (Item | Category)
+              Container(
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    if (canManageItems)
                       Expanded(
                         child: GestureDetector(
                           onTap: () => _selectTab(0),
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  _selectedTabIndex == 0
+                                  selectedTabIndex == 0
                                       ? AppColors.neutral[200]
                                       : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
@@ -249,7 +268,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w700,
                                 color:
-                                    _selectedTabIndex == 0
+                                    selectedTabIndex == 0
                                         ? AppColors.secondary[900]
                                         : AppColors.secondary[400],
                               ),
@@ -257,18 +276,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           ),
                         ),
                       ),
+                    if (canManageItems && canManageCategories)
                       Container(
                         width: 1,
                         height: 24,
                         color: AppColors.neutral[400],
                       ),
+                    if (canManageCategories)
                       Expanded(
                         child: GestureDetector(
                           onTap: () => _selectTab(1),
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  _selectedTabIndex == 1
+                                  selectedTabIndex == 1
                                       ? AppColors.neutral[200]
                                       : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
@@ -280,7 +301,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w700,
                                 color:
-                                    _selectedTabIndex == 1
+                                    selectedTabIndex == 1
                                         ? AppColors.secondary[900]
                                         : AppColors.secondary[400],
                               ),
@@ -288,62 +309,60 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 16),
 
-                // Separated Capsule Search, Filter & View Toggle Bar
-                CapsuleSearchFilterBar(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  onFilterTap: () {},
-                  isGridView: _isGridView,
-                  onToggleView:
-                      () => setState(() => _isGridView = !_isGridView),
-                  hintText: 'Search',
+              // Separated Capsule Search, Filter & View Toggle Bar
+              CapsuleSearchFilterBar(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                onFilterTap: () {},
+                isGridView: _isGridView,
+                onToggleView: () => setState(() => _isGridView = !_isGridView),
+                hintText: 'Search',
+              ),
+              const SizedBox(height: 16),
+
+              if (selectedTabIndex == 0 && canManageItems)
+                StreamBuilder<List<CatalogItem>>(
+                  stream: _itemsStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return _CatalogLoadError(error: snapshot.error!);
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return ItemCatalogSubview(
+                      items: snapshot.data!,
+                      isGridView: _isGridView,
+                      onAddItem: _openAddItem,
+                      onItemTap: _openItemDetails,
+                    );
+                  },
+                )
+              else if (canManageCategories)
+                StreamBuilder<List<CatalogCategory>>(
+                  stream: _categoriesStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return _CatalogLoadError(error: snapshot.error!);
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return CategoryCatalogSubview(
+                      categories: snapshot.data!,
+                      isGridView: _isGridView,
+                      onAddDiscount: _openAddDiscount,
+                      onAddCategory: _openAddCategory,
+                      onCategoryTap: _openCategoryDetails,
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-
-                if (_selectedTabIndex == 0)
-                  StreamBuilder<List<CatalogItem>>(
-                    stream: _itemsStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _CatalogLoadError(error: snapshot.error!);
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      return ItemCatalogSubview(
-                        items: snapshot.data!,
-                        isGridView: _isGridView,
-                        onAddItem: _openAddItem,
-                        onItemTap: _openItemDetails,
-                      );
-                    },
-                  )
-                else
-                  StreamBuilder<List<CatalogCategory>>(
-                    stream: _categoriesStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _CatalogLoadError(error: snapshot.error!);
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      return CategoryCatalogSubview(
-                        categories: snapshot.data!,
-                        isGridView: _isGridView,
-                        onAddDiscount: _openAddDiscount,
-                        onAddCategory: _openAddCategory,
-                        onCategoryTap: _openCategoryDetails,
-                      );
-                    },
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

@@ -13,7 +13,7 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  String _amountStr = '250';
+  String _amountStr = '0';
   bool _isExact = false;
 
   void _onKeyPress(String val) {

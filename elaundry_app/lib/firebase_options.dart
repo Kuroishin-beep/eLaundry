@@ -55,7 +55,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1039020278532',
     projectId: 'elaundry-494ce',
     authDomain: 'elaundry-494ce.firebaseapp.com',
-    databaseURL: 'https://elaundry-494ce-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://elaundry-494ce-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'elaundry-494ce.firebasestorage.app',
     measurementId: 'G-JQDBXPWC5W',
   );
@@ -65,7 +66,8 @@ class DefaultFirebaseOptions {
     appId: '1:1039020278532:android:07e5a5558db07cb8870651',
     messagingSenderId: '1039020278532',
     projectId: 'elaundry-494ce',
-    databaseURL: 'https://elaundry-494ce-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://elaundry-494ce-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'elaundry-494ce.firebasestorage.app',
   );
 }

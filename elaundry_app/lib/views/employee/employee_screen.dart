@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/themes/theme.dart';
+import '../../controllers/employee_controller.dart';
+import '../../models/employee_models.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import 'staffs/staff_screen.dart';
 import 'roles/role_screen.dart';
+import 'roles/edit_role_screen.dart';
 
 class EmployeeScreen extends StatefulWidget {
   const EmployeeScreen({super.key});
@@ -13,6 +16,16 @@ class EmployeeScreen extends StatefulWidget {
 
 class _EmployeeScreenState extends State<EmployeeScreen> {
   int _selectedTabIndex = 0; // 0: Staff, 1: Roles
+  final _employeeController = EmployeeController();
+
+  Future<void> _openAddRole() async {
+    final role = await Navigator.of(
+      context,
+    ).push<RoleItem>(MaterialPageRoute(builder: (_) => const EditRoleScreen()));
+    if (role != null) {
+      await _employeeController.saveRole(role);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +136,7 @@ class _EmployeeScreenState extends State<EmployeeScreen> {
 
                 // Active View Body
                 _selectedTabIndex == 0
-                    ? const StaffSubView()
+                    ? StaffSubView(onAddRole: _openAddRole)
                     : const RoleSubView(),
               ],
             ),

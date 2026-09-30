@@ -61,7 +61,7 @@ class _ReportShiftSubviewState extends State<ReportShiftSubview> {
 
         if (filteredToday.isEmpty && filteredPast.isEmpty)
           SizedBox(
-            height: 360,
+            height: MediaQuery.sizeOf(context).height - 280,
             child: Center(
               child: EmptyState(
                 icon: Icons.receipt_long_outlined,

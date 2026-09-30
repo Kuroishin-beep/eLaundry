@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/shift_model.dart';
+import '../services/store_context.dart';
 
 class ShiftController {
   ShiftController({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -19,8 +20,15 @@ class ShiftController {
     return user.uid;
   }
 
-  CollectionReference<Map<String, dynamic>> get _shifts =>
-      _firestore.collection('stores').doc(_userId).collection('shifts');
+  Future<CollectionReference<Map<String, dynamic>>> get _shifts async =>
+      _firestore
+          .collection('stores')
+          .doc(await _storeId())
+          .collection('shifts');
+
+  Future<String> _storeId() async =>
+      (await StoreContextResolver(firestore: _firestore, auth: _auth).resolve())
+          .storeId;
 
   CollectionReference<Map<String, dynamic>> get _orders =>
       _firestore.collection('orders');
@@ -28,41 +36,48 @@ class ShiftController {
   CollectionReference<Map<String, dynamic>> get _counters =>
       _firestore.collection('counters');
 
-  Stream<List<ShiftModel>> watchShifts() => _shifts
-      .where('opened_by_user_id', isEqualTo: _userId)
-      .snapshots()
-      .map((snapshot) {
-        final shifts =
-            snapshot.docs
-                .map(
-                  (document) =>
-                      ShiftModel.fromMap(document.data(), id: document.id),
-                )
-                .toList()
-              ..sort((left, right) {
-                final leftDate = left.openedAt;
-                final rightDate = right.openedAt;
-                if (leftDate == null || rightDate == null) return 0;
-                return rightDate.compareTo(leftDate);
-              });
-        return shifts;
-      });
+  Stream<List<ShiftModel>> watchShifts() async* {
+    final shifts = await _shifts;
+    yield* shifts
+        .where('opened_by_user_id', isEqualTo: _userId)
+        .snapshots()
+        .map((snapshot) {
+          final result =
+              snapshot.docs
+                  .map(
+                    (document) =>
+                        ShiftModel.fromMap(document.data(), id: document.id),
+                  )
+                  .toList()
+                ..sort((left, right) {
+                  final leftDate = left.openedAt;
+                  final rightDate = right.openedAt;
+                  if (leftDate == null || rightDate == null) return 0;
+                  return rightDate.compareTo(leftDate);
+                });
+          return result;
+        });
+  }
 
-  Stream<ShiftModel?> watchActiveShift() => _shifts
-      .where('opened_by_user_id', isEqualTo: _userId)
-      .snapshots()
-      .map((snapshot) {
-        final activeDocuments = snapshot.docs.where(
-          (document) => document.data()['is_closed'] != true,
-        );
-        if (activeDocuments.isEmpty) return null;
-        final document = activeDocuments.first;
-        return ShiftModel.fromMap(document.data(), id: document.id);
-      });
+  Stream<ShiftModel?> watchActiveShift() async* {
+    final shifts = await _shifts;
+    yield* shifts
+        .where('opened_by_user_id', isEqualTo: _userId)
+        .snapshots()
+        .map((snapshot) {
+          final activeDocuments = snapshot.docs.where(
+            (document) => document.data()['is_closed'] != true,
+          );
+          if (activeDocuments.isEmpty) return null;
+          final document = activeDocuments.first;
+          return ShiftModel.fromMap(document.data(), id: document.id);
+        });
+  }
 
   Future<ShiftModel?> getActiveShift() async {
+    final shifts = await _shifts;
     final snapshot =
-        await _shifts.where('opened_by_user_id', isEqualTo: _userId).get();
+        await shifts.where('opened_by_user_id', isEqualTo: _userId).get();
     final activeDocuments = snapshot.docs.where(
       (document) => document.data()['is_closed'] != true,
     );
@@ -89,8 +104,9 @@ class ShiftController {
     }
 
     final userId = _userId;
+    final shifts = await _shifts;
     final activeShift =
-        await _shifts.where('opened_by_user_id', isEqualTo: userId).get();
+        await shifts.where('opened_by_user_id', isEqualTo: userId).get();
     if (activeShift.docs.any(
       (document) => document.data()['is_closed'] != true,
     )) {
@@ -107,7 +123,7 @@ class ShiftController {
       final sequence =
           (previousSequence is num ? previousSequence.toInt() : 0) + 1;
       final shiftId = 'SH-$dateKey-${sequence.toString().padLeft(4, '0')}';
-      final reference = _shifts.doc(shiftId);
+      final reference = shifts.doc(shiftId);
       shift = ShiftModel(
         id: shiftId,
         dateTime: openedAt.toLocal().toString(),
@@ -122,26 +138,34 @@ class ShiftController {
     return shift;
   }
 
-  Stream<ShiftModel> watchShiftSales(ShiftModel shift) => _orders
-      .where('shift_id', isEqualTo: shift.id)
-      .snapshots()
-      .map(
-        (snapshot) => _withPaidOrderTotals(
-          shift,
-          snapshot.docs
-              .where((document) => document.data()['order_status'] == 'paid')
-              .toList(),
-        ),
-      );
+  Stream<ShiftModel> watchShiftSales(ShiftModel shift) async* {
+    final storeId = await _storeId();
+    yield* _orders
+        .where('store_id', isEqualTo: storeId)
+        .where('shift_id', isEqualTo: shift.id)
+        .snapshots()
+        .map(
+          (snapshot) => _withPaidOrderTotals(
+            shift,
+            snapshot.docs
+                .where((document) => document.data()['order_status'] == 'paid')
+                .toList(),
+          ),
+        );
+  }
 
   Future<ShiftModel> closeShift(ShiftModel shift) async {
     final userId = _userId;
+    final shifts = await _shifts;
     if (shift.openedByUserId != userId) {
       throw StateError('Only the user who opened this shift can close it.');
     }
 
     final shiftOrders =
-        await _orders.where('shift_id', isEqualTo: shift.id).get();
+        await _orders
+            .where('store_id', isEqualTo: await _storeId())
+            .where('shift_id', isEqualTo: shift.id)
+            .get();
     final paidOrders =
         shiftOrders.docs
             .where((document) => document.data()['order_status'] == 'paid')
@@ -155,7 +179,7 @@ class ShiftController {
       closedAt: _formatTime(DateTime.now()),
       pendingOrders: unpaidOrderCount,
     );
-    await _shifts.doc(shift.id).update({
+    await shifts.doc(shift.id).update({
       'is_closed': true,
       'closed_at': FieldValue.serverTimestamp(),
       'cash_payments': calculated.cashPayments,

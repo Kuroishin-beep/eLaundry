@@ -10,6 +10,118 @@ import '../views/reports/report_screen.dart';
 import '../views/settings/settings_screen.dart';
 import '../views/shift/shift_screen.dart';
 import '../views/transaction_history/transaction_history_screen.dart';
+import '../services/store_context.dart';
+
+class NavigationPermissions {
+  final bool orders;
+  final bool transactionHistory;
+  final bool machines;
+  final bool manageItems;
+  final bool manageCategory;
+  final bool shiftManagement;
+  final bool shiftReport;
+  final bool catalog;
+  final bool shifts;
+  final bool employees;
+  final bool reports;
+  final bool settings;
+
+  const NavigationPermissions({
+    required this.orders,
+    required this.transactionHistory,
+    required this.machines,
+    required this.manageItems,
+    required this.manageCategory,
+    required this.shiftManagement,
+    required this.shiftReport,
+    required this.catalog,
+    required this.shifts,
+    required this.employees,
+    required this.reports,
+    required this.settings,
+  });
+
+  static const none = NavigationPermissions(
+    orders: false,
+    transactionHistory: false,
+    machines: false,
+    manageItems: false,
+    manageCategory: false,
+    shiftManagement: false,
+    shiftReport: false,
+    catalog: false,
+    shifts: false,
+    employees: false,
+    reports: false,
+    settings: false,
+  );
+
+  static const owner = NavigationPermissions(
+    orders: true,
+    transactionHistory: true,
+    machines: true,
+    manageItems: true,
+    manageCategory: true,
+    shiftManagement: true,
+    shiftReport: true,
+    catalog: true,
+    shifts: true,
+    employees: true,
+    reports: true,
+    settings: true,
+  );
+
+  static Future<NavigationPermissions> load() async {
+    try {
+      final context = await StoreContextResolver().resolve();
+      if (context.isOwner) return owner;
+      final permissions = context.permissions;
+      return NavigationPermissions(
+        orders: permissions.processPayments,
+        transactionHistory: permissions.transactionHistory,
+        machines: permissions.manageMachines,
+        manageItems: permissions.manageItems,
+        manageCategory: permissions.manageCategory,
+        shiftManagement: permissions.shiftManagement,
+        shiftReport: permissions.shiftReport,
+        catalog: permissions.manageItems || permissions.manageCategory,
+        shifts: permissions.shiftManagement || permissions.shiftReport,
+        employees: false,
+        reports: permissions.accessReport,
+        settings: false,
+      );
+    } on StateError {
+      return none;
+    }
+  }
+}
+
+class NavigationPermissionsBuilder extends StatelessWidget {
+  final Future<NavigationPermissions> future;
+  final Widget Function(BuildContext, NavigationPermissions) builder;
+
+  const NavigationPermissionsBuilder({
+    super.key,
+    required this.future,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<NavigationPermissions>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Unable to load permissions.'));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return builder(context, snapshot.data!);
+      },
+    );
+  }
+}
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -30,10 +142,12 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
   late final AnimationController _animController;
   late final Animation<double> _spinAnimation;
   bool _isOpen = false;
+  late final Future<NavigationPermissions> _permissionsFuture;
 
   @override
   void initState() {
     super.initState();
+    _permissionsFuture = NavigationPermissions.load();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -90,10 +204,19 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
                   scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
                   child: Material(
                     color: Colors.transparent,
-                    child: _FullScreenGridMenu(
-                      onClose: () => Navigator.of(dialogContext).pop(),
-                      onSettingsTap: widget.onSettingsTap,
-                      onMachinesTap: widget.onMachinesTap,
+                    child: FutureBuilder<NavigationPermissions>(
+                      future: _permissionsFuture,
+                      builder: (context, snapshot) {
+                        return _FullScreenGridMenu(
+                          onClose: () => Navigator.of(dialogContext).pop(),
+                          onSettingsTap: widget.onSettingsTap,
+                          onMachinesTap: widget.onMachinesTap,
+                          permissions:
+                              snapshot.hasError
+                                  ? NavigationPermissions.none
+                                  : snapshot.data ?? NavigationPermissions.none,
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -187,9 +310,11 @@ class _FullScreenGridMenu extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onMachinesTap;
+  final NavigationPermissions permissions;
 
   const _FullScreenGridMenu({
     required this.onClose,
+    required this.permissions,
     this.onSettingsTap,
     this.onMachinesTap,
   });
@@ -213,6 +338,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.receipt_long_rounded,
         label: 'Orders',
+        enabled: permissions.orders,
         onTap: () {
           if (context.findAncestorWidgetOfExactType<OrdersScreen>() == null) {
             _navigateTo(context, const OrdersScreen());
@@ -224,6 +350,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.receipt_rounded,
         label: 'Transaction History',
+        enabled: permissions.transactionHistory,
         onTap: () {
           if (context
                   .findAncestorWidgetOfExactType<TransactionHistoryScreen>() ==
@@ -237,6 +364,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.local_laundry_service_rounded,
         label: 'Laundry Machine',
+        enabled: permissions.machines,
         onTap: () {
           if (onMachinesTap != null) {
             onClose();
@@ -254,6 +382,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.sell_rounded,
         label: 'Item',
+        enabled: permissions.catalog,
         onTap: () {
           if (context.findAncestorWidgetOfExactType<CatalogScreen>() == null) {
             _navigateTo(context, const CatalogScreen());
@@ -265,6 +394,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.schedule_rounded,
         label: 'Shift',
+        enabled: permissions.shifts,
         onTap: () {
           if (context.findAncestorWidgetOfExactType<ShiftScreen>() == null) {
             _navigateTo(context, const ShiftScreen());
@@ -276,6 +406,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.badge_rounded,
         label: 'Employee',
+        enabled: permissions.employees,
         onTap: () {
           if (context.findAncestorWidgetOfExactType<EmployeeScreen>() == null) {
             _navigateTo(context, const EmployeeScreen());
@@ -287,6 +418,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.insert_chart_rounded,
         label: 'Reports',
+        enabled: permissions.reports,
         onTap: () {
           if (context.findAncestorWidgetOfExactType<ReportScreen>() == null) {
             _navigateTo(context, const ReportScreen());
@@ -298,6 +430,7 @@ class _FullScreenGridMenu extends StatelessWidget {
       _NavItemData(
         icon: Icons.settings_rounded,
         label: 'Settings',
+        enabled: permissions.settings,
         onTap: () {
           if (onSettingsTap != null) {
             onClose();
@@ -353,8 +486,14 @@ class _NavItemData {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final bool enabled;
 
-  const _NavItemData({required this.icon, required this.label, this.onTap});
+  const _NavItemData({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.enabled = true,
+  });
 }
 
 class _SquareNavCard extends StatelessWidget {
@@ -366,12 +505,15 @@ class _SquareNavCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: item.enabled ? Colors.white : AppColors.neutral[300],
       borderRadius: BorderRadius.circular(24),
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.12),
       child: InkWell(
         onTap: () {
+          if (!item.enabled) {
+            return;
+          }
           if (item.onTap != null) {
             item.onTap!();
           } else {
@@ -388,7 +530,10 @@ class _SquareNavCard extends StatelessWidget {
                 width: 74,
                 height: 74,
                 decoration: BoxDecoration(
-                  color: AppColors.primary[600],
+                  color:
+                      item.enabled
+                          ? AppColors.primary[600]
+                          : AppColors.neutral[500],
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(item.icon, color: Colors.white, size: 48),
@@ -399,10 +544,13 @@ class _SquareNavCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.normal,
-                  color: Color(0xFF2C2D2D),
+                  color:
+                      item.enabled
+                          ? const Color(0xFF2C2D2D)
+                          : AppColors.secondary[500],
                   height: 1.2,
                 ),
               ),

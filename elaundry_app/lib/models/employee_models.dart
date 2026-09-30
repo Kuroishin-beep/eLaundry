@@ -1,23 +1,105 @@
 import 'package:flutter/foundation.dart';
 
+class StaffMember {
+  final String id;
+  final String name;
+  final String role;
+  final bool isClockedIn;
+  final String lastClockTime;
+  final String pin;
+  final String email;
+  final String contactNumber;
+  final String startDate;
+  final String totalSales;
+  final int attendanceDays;
+  final String note;
+
+  const StaffMember({
+    required this.id,
+    required this.name,
+    required this.role,
+    required this.isClockedIn,
+    required this.lastClockTime,
+    required this.pin,
+    required this.email,
+    required this.contactNumber,
+    required this.startDate,
+    this.totalSales = '₱0.00',
+    this.attendanceDays = 0,
+    this.note = '',
+  });
+
+  StaffMember copyWith({
+    String? id,
+    String? name,
+    String? role,
+    bool? isClockedIn,
+    String? lastClockTime,
+    String? pin,
+    String? email,
+    String? contactNumber,
+    String? startDate,
+    String? totalSales,
+    int? attendanceDays,
+    String? note,
+  }) {
+    return StaffMember(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      isClockedIn: isClockedIn ?? this.isClockedIn,
+      lastClockTime: lastClockTime ?? this.lastClockTime,
+      pin: pin ?? this.pin,
+      email: email ?? this.email,
+      contactNumber: contactNumber ?? this.contactNumber,
+      startDate: startDate ?? this.startDate,
+      totalSales: totalSales ?? this.totalSales,
+      attendanceDays: attendanceDays ?? this.attendanceDays,
+      note: note ?? this.note,
+    );
+  }
+
+  factory StaffMember.fromMap(Map<String, dynamic> map, String id) {
+    return StaffMember(
+      id: id,
+      name: map['name'] as String? ?? '',
+      role: map['role'] as String? ?? '',
+      isClockedIn: map['is_clocked_in'] as bool? ?? false,
+      lastClockTime: map['last_clock_time'] as String? ?? '',
+      pin: map['pin'] as String? ?? '',
+      email: map['email'] as String? ?? '',
+      contactNumber: map['contact_number'] as String? ?? '',
+      startDate: map['start_date'] as String? ?? '',
+      totalSales: map['total_sales'] as String? ?? '₱0.00',
+      attendanceDays: (map['attendance_days'] as num?)?.toInt() ?? 0,
+      note: map['note'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'name': name,
+    'role': role,
+    'is_clocked_in': isClockedIn,
+    'last_clock_time': lastClockTime,
+    'pin': pin,
+    'email': email,
+    'contact_number': contactNumber,
+    'start_date': startDate,
+    'total_sales': totalSales,
+    'attendance_days': attendanceDays,
+    'note': note,
+  };
+}
+
 @immutable
 class RolePermissions {
-  // Orders
   final bool processPayments;
   final bool transactionHistory;
-
-  // Catalog
   final bool manageItems;
   final bool manageCategory;
-
-  // Laundry
   final bool manageMachines;
-
-  // Shift
   final bool shiftManagement;
   final bool shiftReport;
-
-  // Analytics & Reports
   final bool accessReport;
 
   const RolePermissions({
@@ -67,18 +149,16 @@ class RolePermissions {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'processPayments': processPayments,
-      'transactionHistory': transactionHistory,
-      'manageItems': manageItems,
-      'manageCategory': manageCategory,
-      'manageMachines': manageMachines,
-      'shiftManagement': shiftManagement,
-      'shiftReport': shiftReport,
-      'accessReport': accessReport,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'processPayments': processPayments,
+    'transactionHistory': transactionHistory,
+    'manageItems': manageItems,
+    'manageCategory': manageCategory,
+    'manageMachines': manageMachines,
+    'shiftManagement': shiftManagement,
+    'shiftReport': shiftReport,
+    'accessReport': accessReport,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -163,15 +243,13 @@ class RoleItem {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'assignedStaffCount': assignedStaffCount,
-      'description': description,
-      'iconName': iconName,
-      'permissions': permissions.toMap(),
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'name': name,
+    'assignedStaffCount': assignedStaffCount,
+    'description': description,
+    'iconName': iconName,
+    'permissions': permissions.toMap(),
+  };
 
   @override
   bool operator ==(Object other) =>

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
-import '../../../models/staff_model.dart';
+import '../../../controllers/employee_controller.dart';
+import '../../../models/employee_models.dart';
+import '../../../shared/empty_states.dart';
 import '../../../shared/search_filter_bar.dart';
 import 'edit_staff_screen.dart';
 import 'staff_details_screen.dart';
 
 class StaffSubView extends StatefulWidget {
-  const StaffSubView({super.key});
+  final VoidCallback? onAddRole;
+
+  const StaffSubView({super.key, this.onAddRole});
 
   @override
   State<StaffSubView> createState() => _StaffSubViewState();
@@ -15,43 +19,26 @@ class StaffSubView extends StatefulWidget {
 
 class _StaffSubViewState extends State<StaffSubView> {
   final _searchController = TextEditingController();
+  final _employeeController = EmployeeController();
   String _selectedFilter = 'All';
-
-  final List<StaffMember> _staffList = [
-    const StaffMember(
-      id: '1',
-      name: 'Juan Dela Cruz',
-      role: 'Cashier',
-      isClockedIn: true,
-      lastClockTime: '08/21/2026 – 10:00 AM',
-      pin: '1234',
-      email: 'juandlc@gmail.com',
-      contactNumber: '+63 987 123 4560',
-      startDate: 'August 1, 2026',
-      totalSales: '₱5,232.00',
-      attendanceDays: 15,
-      note: 'Assigned to morning cash shifts.',
-    ),
-    const StaffMember(
-      id: '2',
-      name: 'Maria Santos',
-      role: 'Cashier',
-      isClockedIn: false,
-      lastClockTime: '08/21/2026 – 10:00 AM',
-      pin: '5678',
-      email: 'maria.santos@gmail.com',
-      contactNumber: '+63 912 345 6789',
-      startDate: 'July 15, 2026',
-      totalSales: '₱12,450.00',
-      attendanceDays: 28,
-      note: 'Senior floor supervisor.',
-    ),
-  ];
+  List<StaffMember> _staffList = [];
+  List<RoleItem> _roles = [];
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _employeeController.watchEmployees().listen((staff) {
+      if (mounted) setState(() => _staffList = staff);
+    });
+    _employeeController.watchRoles().listen((roles) {
+      if (mounted) setState(() => _roles = roles);
+    });
   }
 
   List<StaffMember> get _filteredStaff {
@@ -63,10 +50,12 @@ class _StaffSubViewState extends State<StaffSubView> {
           staff.role.toLowerCase().contains(
             _searchController.text.toLowerCase().trim(),
           );
-      if (_selectedFilter == 'Clocked In')
+      if (_selectedFilter == 'Clocked In') {
         return matchesQuery && staff.isClockedIn;
-      if (_selectedFilter == 'Clocked Out')
+      }
+      if (_selectedFilter == 'Clocked Out') {
         return matchesQuery && !staff.isClockedIn;
+      }
       return matchesQuery;
     }).toList();
   }
@@ -133,10 +122,24 @@ class _StaffSubViewState extends State<StaffSubView> {
 
   void _navigateToAddStaff() async {
     final newStaff = await Navigator.of(context).push<StaffMember>(
-      MaterialPageRoute(builder: (context) => const EditStaffScreen()),
+      MaterialPageRoute(
+        builder: (context) => EditStaffScreen(availableRoles: _roles),
+      ),
     );
     if (newStaff != null) {
-      setState(() => _staffList.add(newStaff));
+      try {
+        await _employeeController.createEmployee(newStaff);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
+              content: Text('Unable to create staff: $error'),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -146,12 +149,9 @@ class _StaffSubViewState extends State<StaffSubView> {
     );
 
     if (updatedStaff == 'deleted') {
-      setState(() => _staffList.removeWhere((s) => s.id == staff.id));
+      await _employeeController.deleteEmployee(staff.id);
     } else if (updatedStaff is StaffMember) {
-      final index = _staffList.indexWhere((s) => s.id == updatedStaff.id);
-      if (index != -1) {
-        setState(() => _staffList[index] = updatedStaff);
-      }
+      await _employeeController.updateEmployee(updatedStaff);
     }
   }
 
@@ -165,6 +165,33 @@ class _StaffSubViewState extends State<StaffSubView> {
 
   @override
   Widget build(BuildContext context) {
+    final hasNoRoles = _roles.isEmpty;
+    final filteredStaff = _filteredStaff;
+    if (!hasNoRoles && _staffList.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CapsuleSearchFilterBar(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
+            onFilterTap: _showFilterSheet,
+            hintText: 'Search staff or role...',
+          ),
+          SizedBox(
+            height: MediaQuery.sizeOf(context).height - 300,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.people_outline_rounded,
+                title: 'No Staff Yet',
+                description: 'Add staff to start managing your employees.',
+                actionLabel: 'Add Staff',
+                onAction: _navigateToAddStaff,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -175,157 +202,189 @@ class _StaffSubViewState extends State<StaffSubView> {
           hintText: 'Search staff or role...',
         ),
         const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (_selectedFilter != 'All')
-              Chip(
-                label: Text(
-                  _selectedFilter,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+        if (!hasNoRoles) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (_selectedFilter != 'All')
+                Chip(
+                  label: Text(
+                    _selectedFilter,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  deleteIcon: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
                     color: Colors.white,
                   ),
+                  onDeleted: () => setState(() => _selectedFilter = 'All'),
+                  backgroundColor: AppColors.primary,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                )
+              else
+                const SizedBox.shrink(),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: _navigateToAddStaff,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                deleteIcon: const Icon(
-                  Icons.close_rounded,
-                  size: 14,
-                  color: Colors.white,
-                ),
-                onDeleted: () => setState(() => _selectedFilter = 'All'),
-                backgroundColor: AppColors.primary,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              )
-            else
-              const SizedBox.shrink(),
-            const Spacer(),
-            ElevatedButton.icon(
-              onPressed: _navigateToAddStaff,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(0, 48),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Add Staff', style: TextStyle(fontSize: 13)),
               ),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Add Staff', style: TextStyle(fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
+        if (hasNoRoles)
+          SizedBox(
+            height: MediaQuery.sizeOf(context).height - 300,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.badge_outlined,
+                title: 'No Roles Yet',
+                description: 'Create a role first before adding staff.',
+                actionLabel: 'Add Role',
+                onAction: widget.onAddRole,
+              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _filteredStaff.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final member = _filteredStaff[index];
-            return InkWell(
-              onTap: () => _openStaffDetails(member),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: const Color(0xFF2C2D2D),
-                      child: Text(
-                        _getInitials(member.name),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+          )
+        else if (filteredStaff.isEmpty)
+          SizedBox(
+            height: MediaQuery.sizeOf(context).height - 300,
+            child: Center(
+              child: EmptyState(
+                icon: Icons.people_outline_rounded,
+                title: _staffList.isEmpty ? 'No Staff Yet' : 'No Staff Found',
+                description:
+                    _staffList.isEmpty
+                        ? 'Add staff to start managing your employees.'
+                        : 'Try a different search or filter.',
+                actionLabel: _staffList.isEmpty ? 'Add Staff' : null,
+                onAction: _staffList.isEmpty ? _navigateToAddStaff : null,
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filteredStaff.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final member = filteredStaff[index];
+              return InkWell(
+                onTap: () => _openStaffDetails(member),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundColor: const Color(0xFF2C2D2D),
+                        child: Text(
+                          _getInitials(member.name),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                member.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF2D2E2E),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      member.isClockedIn
-                                          ? AppColors.success
-                                          : AppColors.accent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  member.isClockedIn
-                                      ? 'CLOCKED IN'
-                                      : 'CLOCKED OUT',
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  member.name,
                                   style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 9.5,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
+                                    color: Color(0xFF2D2E2E),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                member.role,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: AppColors.secondary[600],
-                                  fontWeight: FontWeight.w500,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        member.isClockedIn
+                                            ? AppColors.success
+                                            : AppColors.accent,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    member.isClockedIn
+                                        ? 'CLOCKED IN'
+                                        : 'CLOCKED OUT',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                member.lastClockTime,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.secondary[500],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  member.role,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.secondary[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Text(
+                                  member.lastClockTime,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.secondary[500],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }

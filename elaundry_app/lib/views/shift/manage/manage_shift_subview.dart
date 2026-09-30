@@ -26,7 +26,7 @@ class ManageShiftSubview extends StatelessWidget {
       children: [
         if (activeShifts.isEmpty)
           SizedBox(
-            height: 460,
+            height: MediaQuery.sizeOf(context).height - 240,
             child: Center(
               child: EmptyState(
                 icon: Icons.chat_bubble_outline_rounded,
@@ -84,79 +84,81 @@ class ManageShiftSubview extends StatelessWidget {
                     onTap: () => onShiftTap(displayedShift),
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Washer machine pink icon block
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.neutral[500]!),
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.local_laundry_service_rounded,
-                          color: AppColors.accent,
-                          size: 22,
-                        ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              displayedShift.id,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF2C2D2D),
+                      child: Row(
+                        children: [
+                          // Washer machine pink icon block
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.neutral[500]!,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              displayedShift.time,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: AppColors.secondary[400],
-                              ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.local_laundry_service_rounded,
+                              color: AppColors.accent,
+                              size: 22,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayedShift.id,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF2C2D2D),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  displayedShift.time,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppColors.secondary[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            'P${displayedShift.cashPayments.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF222423),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20,
+                            color: Color(0xFF454746),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'P${displayedShift.cashPayments.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF222423),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: Color(0xFF454746),
-                      ),
-                    ],
-                  ),
                     ),
                   );
                 },

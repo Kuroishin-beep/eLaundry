@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
-import '../../../models/staff_model.dart';
+import '../../../models/employee_models.dart';
 import '../../../shared/field_label.dart';
 import 'edit_staff_screen.dart';
 import 'widgets/staff_stat_card.dart';

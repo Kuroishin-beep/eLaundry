@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
-import '../../../models/role_model.dart';
+import '../../../controllers/employee_controller.dart';
+import '../../../models/employee_models.dart';
 import '../../../shared/search_filter_bar.dart';
 import 'edit_role_screen.dart';
 import 'role_details_screen.dart';
@@ -14,35 +15,25 @@ class RoleSubView extends StatefulWidget {
 
 class _RoleSubViewState extends State<RoleSubView> {
   final _searchController = TextEditingController();
-
-  final List<RoleItem> _roles = [
-    const RoleItem(
-      id: '1',
-      name: 'Cashier',
-      assignedStaffCount: 3,
-      description:
-          'Processes customer transactions, handles payments, and ensures accurate cash management.',
-      iconName: 'Point of Sale',
-      permissions: RolePermissions(
-        processPayments: true,
-        transactionHistory: true,
-      ),
-    ),
-    const RoleItem(
-      id: '2',
-      name: 'Store Staff',
-      assignedStaffCount: 0,
-      description:
-          'Manages washer and dryer loading, attends to customer clothing prep, and maintains store order.',
-      iconName: 'Point of Sale',
-      permissions: RolePermissions(manageMachines: true, manageItems: true),
-    ),
-  ];
+  final _controller = EmployeeController();
+  List<RoleItem> _roles = [];
+  List<StaffMember> _staff = [];
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.watchRoles().listen((roles) {
+      if (mounted) setState(() => _roles = roles);
+    });
+    _controller.watchEmployees().listen((staff) {
+      if (mounted) setState(() => _staff = staff);
+    });
   }
 
   List<RoleItem> get _filteredRoles {
@@ -55,7 +46,7 @@ class _RoleSubViewState extends State<RoleSubView> {
       MaterialPageRoute(builder: (context) => const EditRoleScreen()),
     );
     if (newRole != null) {
-      setState(() => _roles.add(newRole));
+      await _controller.saveRole(newRole);
     }
   }
 
@@ -65,12 +56,9 @@ class _RoleSubViewState extends State<RoleSubView> {
     );
 
     if (result == 'deleted') {
-      setState(() => _roles.removeWhere((r) => r.id == role.id));
+      await _controller.deleteRole(role.id);
     } else if (result is RoleItem) {
-      final index = _roles.indexWhere((r) => r.id == result.id);
-      if (index != -1) {
-        setState(() => _roles[index] = result);
-      }
+      await _controller.saveRole(result);
     }
   }
 
@@ -116,6 +104,8 @@ class _RoleSubViewState extends State<RoleSubView> {
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final role = _filteredRoles[index];
+            final assignedStaffCount =
+                _staff.where((staff) => staff.role == role.name).length;
             return InkWell(
               onTap: () => _openRoleDetails(role),
               borderRadius: BorderRadius.circular(8),
@@ -157,7 +147,7 @@ class _RoleSubViewState extends State<RoleSubView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${role.name} (${role.assignedStaffCount})',
+                            '${role.name} ($assignedStaffCount)',
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -166,7 +156,9 @@ class _RoleSubViewState extends State<RoleSubView> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            role.description,
+                            role.description.trim().isEmpty
+                                ? 'No description'
+                                : role.description,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF6B7270),

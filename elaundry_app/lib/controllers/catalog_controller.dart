@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/catalog_models.dart';
 import '../models/store_model.dart';
+import '../services/store_context.dart';
 
 class CatalogController {
   CatalogController({FirebaseAuth? auth, FirebaseFirestore? firestore})
@@ -153,22 +154,23 @@ class CatalogController {
   }
 
   Future<_CatalogScope> _catalogScope() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw StateError('A signed-in user is required to access the catalog.');
-    }
+    final context =
+        await StoreContextResolver(
+          firestore: _firestore,
+          auth: _auth,
+        ).resolve();
 
-    final storeReference = _firestore.collection('stores').doc(userId);
+    final storeReference = _firestore.collection('stores').doc(context.storeId);
     final storeSnapshot = await storeReference.get();
     if (!storeSnapshot.exists) {
       await storeReference.set(
-        StoreModel(id: userId).toMap(),
+        StoreModel(id: context.storeId).toMap(),
         SetOptions(merge: true),
       );
     }
 
     return _CatalogScope(
-      userId: userId,
+      userId: _auth.currentUser!.uid,
       storeId: storeReference.id,
       collection: storeReference.collection(_catalogCollection),
     );

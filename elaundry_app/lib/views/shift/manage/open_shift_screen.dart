@@ -10,7 +10,7 @@ class OpenShiftScreen extends StatefulWidget {
 }
 
 class _OpenShiftScreenState extends State<OpenShiftScreen> {
-  String _amountStr = '5000';
+  String _amountStr = '0';
 
   void _onKeyPress(String val) {
     if (_amountStr == '0') {
