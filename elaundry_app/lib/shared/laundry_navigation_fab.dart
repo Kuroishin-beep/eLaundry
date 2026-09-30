@@ -5,6 +5,7 @@ import '../core/themes/theme.dart';
 import '../views/laundry/machine_screen.dart';
 import '../views/settings/settings_screen.dart';
 import '../views/employee/employee_screen.dart';
+import '../views/catalog/catalog_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -204,7 +205,17 @@ class _NavigationGridCard extends StatelessWidget {
           }
         },
       ),
-      _NavItemData(icon: Icons.sell_rounded, label: 'Item'),
+      _NavItemData(
+        icon: Icons.sell_rounded,
+        label: 'Item',
+        onTap: () {
+          if (context.findAncestorWidgetOfExactType<CatalogScreen>() == null) {
+            _navigateTo(context, const CatalogScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(icon: Icons.alarm_rounded, label: 'Shift'),
       _NavItemData(
         icon: Icons.badge_rounded,

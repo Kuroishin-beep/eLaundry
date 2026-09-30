@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
 import '../../../models/staff_model.dart';
 import '../../../shared/search_filter_bar.dart';
-import '../../../shared/laundry_navigation_fab.dart';
 import 'edit_staff_screen.dart';
 import 'staff_details_screen.dart';
 
