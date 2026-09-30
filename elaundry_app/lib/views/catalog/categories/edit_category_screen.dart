@@ -83,6 +83,27 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          color: pageBgColor,
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: SizedBox(
+            height: 50,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(_isEditing ? 'Save Changes' : 'Save'),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -221,22 +242,6 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Save Button
-                    SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(_isEditing ? 'Save Changes' : 'Save'),
-                      ),
                     ),
                   ],
                 ),

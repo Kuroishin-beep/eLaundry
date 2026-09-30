@@ -47,16 +47,18 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: widget.categoryToEdit?.name ?? '',
+    final discount = widget.categoryToEdit;
+    _discountType = discount?.discountType ?? 'Percentage';
+    _nameController = TextEditingController(text: discount?.name ?? '');
+    _amountController = TextEditingController(
+      text: discount?.discountAmount.toString() ?? '0',
     );
-    _amountController = TextEditingController(text: '0');
     _minQtyController = TextEditingController(text: '0');
     _minWeightController = TextEditingController(text: '0');
-    _minSpendController = TextEditingController(text: '0');
-    _notesController = TextEditingController(
-      text: widget.categoryToEdit?.note ?? '',
+    _minSpendController = TextEditingController(
+      text: discount?.minSpend?.toString() ?? '0',
     );
+    _notesController = TextEditingController(text: discount?.note ?? '');
   }
 
   @override
@@ -238,7 +240,9 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
             DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
         quantity: 1,
-        minSpend: 'Min. Spend P${_minSpendController.text.trim()}',
+        minSpend: double.parse(_minSpendController.text.trim()),
+        discountAmount: double.parse(_amountController.text.trim()),
+        discountType: _discountType,
         isDiscount: true,
         note: _notesController.text.trim(),
       );
@@ -467,6 +471,21 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
                                         size: 18,
                                       ),
                                     ),
+                                    validator: (value) {
+                                      final amount = double.tryParse(
+                                        value?.trim() ?? '',
+                                      );
+                                      if (amount == null ||
+                                          !amount.isFinite ||
+                                          amount < 0) {
+                                        return 'Enter a valid discount amount';
+                                      }
+                                      if (_discountType == 'Percentage' &&
+                                          amount > 100) {
+                                        return 'Percentage cannot exceed 100';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ],
                               ),
@@ -604,6 +623,16 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
                                         size: 18,
                                       ),
                                     ),
+                                    validator: (value) {
+                                      final minSpend = double.tryParse(
+                                        value?.trim() ?? '',
+                                      );
+                                      return minSpend == null ||
+                                              !minSpend.isFinite ||
+                                              minSpend < 0
+                                          ? 'Enter a valid minimum spend'
+                                          : null;
+                                    },
                                   ),
                                 ],
                               ),

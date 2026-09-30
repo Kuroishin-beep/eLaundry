@@ -5,6 +5,7 @@ import '../../../../models/catalog_models.dart';
 import '../../../../shared/field_label.dart';
 import '../widgets/icon_section_card.dart';
 import 'edit_category_screen.dart';
+import 'edit_discount_screen.dart';
 
 class CategoryDetailsScreen extends StatefulWidget {
   final CatalogCategory category;
@@ -36,8 +37,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Delete Category?',
+                Text(
+                  _currentCategory.isDiscount
+                      ? 'Delete Discount?'
+                      : 'Delete Category?',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -113,7 +116,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
     final updated = await Navigator.of(context).push<CatalogCategory>(
       MaterialPageRoute(
         builder:
-            (context) => EditCategoryScreen(categoryToEdit: _currentCategory),
+            (context) =>
+                _currentCategory.isDiscount
+                    ? EditDiscountScreen(categoryToEdit: _currentCategory)
+                    : EditCategoryScreen(categoryToEdit: _currentCategory),
       ),
     );
 
@@ -154,49 +160,50 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
           onPressed: () => Navigator.of(context).pop(_currentCategory),
         ),
         actions: [
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: AppColors.secondary[900],
-            ),
-            onSelected: (val) {
-              if (val == 'edit') _navigateToEdit();
-              if (val == 'delete') _showDeleteDialog();
-            },
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Edit Category'),
-                      ],
+          if (!_currentCategory.isBuiltIn)
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert_rounded,
+                color: AppColors.secondary[900],
+              ),
+              onSelected: (val) {
+                if (val == 'edit') _navigateToEdit();
+                if (val == 'delete') _showDeleteDialog();
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit Category'),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                          color: AppColors.accent,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Delete Category',
-                          style: TextStyle(color: AppColors.accent),
-                        ),
-                      ],
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            size: 18,
+                            color: AppColors.accent,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Delete Category',
+                            style: TextStyle(color: AppColors.accent),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-          ),
+                  ],
+            ),
         ],
       ),
       bottomNavigationBar: Container(
@@ -228,29 +235,31 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _navigateToEdit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+              if (!_currentCategory.isBuiltIn) ...[
+                const SizedBox(width: 14),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _navigateToEdit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Edit',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                      child: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -286,14 +295,44 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
 
                   // --- 2. INVENTORY & DETAILS ---
                   IconSectionCard(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'INVENTORY & DETAILS',
+                    icon:
+                        _currentCategory.isDiscount
+                            ? Icons.sell_outlined
+                            : Icons.inventory_2_outlined,
+                    title:
+                        _currentCategory.isDiscount
+                            ? 'DISCOUNT DETAILS'
+                            : 'INVENTORY & DETAILS',
                     children: [
-                      const FieldLabel(label: 'QUANTITY', letterSpacing: 0),
-                      _ReadOnlyFieldBox(
-                        icon: Icons.dialpad_rounded,
-                        value: '${_currentCategory.quantity}',
-                      ),
+                      if (_currentCategory.isDiscount) ...[
+                        const FieldLabel(
+                          label: 'DISCOUNT AMOUNT',
+                          letterSpacing: 0,
+                        ),
+                        _ReadOnlyFieldBox(
+                          icon: Icons.sell_outlined,
+                          value:
+                              '${_currentCategory.discountAmount.toStringAsFixed(2)} ${_currentCategory.discountType}',
+                        ),
+                        const SizedBox(height: 12),
+                        const FieldLabel(
+                          label: 'MINIMUM SPEND',
+                          letterSpacing: 0,
+                        ),
+                        _ReadOnlyFieldBox(
+                          icon: Icons.sell_outlined,
+                          value:
+                              _currentCategory.minSpend == null
+                                  ? 'None'
+                                  : 'P${_currentCategory.minSpend!.toStringAsFixed(2)}',
+                        ),
+                      ] else ...[
+                        const FieldLabel(label: 'QUANTITY', letterSpacing: 0),
+                        _ReadOnlyFieldBox(
+                          icon: Icons.dialpad_rounded,
+                          value: '${_currentCategory.quantity}',
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 16),

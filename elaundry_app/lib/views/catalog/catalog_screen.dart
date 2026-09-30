@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/catalog_controller.dart';
 import '../../core/themes/theme.dart';
 import '../../models/catalog_models.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
 import './categories/category_catalog_subview.dart';
+import './categories/category_details_screen.dart';
 import './categories/edit_category_screen.dart';
 import './categories/edit_discount_screen.dart';
 import './items/edit_item_screen.dart';
+import './items/item_details_screen.dart';
 import './items/item_catalog_subview.dart';
 
 class CatalogScreen extends StatefulWidget {
@@ -18,51 +21,19 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
+  final CatalogController _catalogController = CatalogController();
   final _searchController = TextEditingController();
   int _selectedTabIndex = 0; // 0: Item, 1: Category
   bool _isGridView = false;
+  late Stream<List<CatalogItem>> _itemsStream;
+  late Stream<List<CatalogCategory>> _categoriesStream;
 
-  final List<CatalogItem> _items = [
-    const CatalogItem(
-      id: '1',
-      name: 'Regular Wash',
-      category: 'Services',
-      machineType: 'Standard',
-      price: 'P80.00',
-      capacity: '5kg to 13kg',
-      duration: '38 mins',
-    ),
-    const CatalogItem(
-      id: '2',
-      name: 'Regular Wash',
-      category: 'Services',
-      machineType: 'Standard',
-      price: 'P80.00',
-      capacity: '5kg to 13kg',
-      duration: '38 mins',
-    ),
-    const CatalogItem(
-      id: '3',
-      name: 'Regular Wash',
-      category: 'Services',
-      machineType: 'Standard',
-      price: 'P80.00',
-      capacity: '5kg to 13kg',
-      duration: '38 mins',
-    ),
-  ];
-
-  final List<CatalogCategory> _categories = [
-    const CatalogCategory(id: '1', name: 'Services', quantity: 10),
-    const CatalogCategory(id: '2', name: 'Add-on', quantity: 10),
-    const CatalogCategory(
-      id: '3',
-      name: 'P100 off',
-      quantity: 1,
-      minSpend: 'Min. Spend P0',
-      isDiscount: true,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _itemsStream = _catalogController.watchItems();
+    _categoriesStream = _catalogController.watchCategoriesAndDiscounts();
+  }
 
   @override
   void dispose() {
@@ -71,30 +42,123 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   void _openAddItem() async {
-    final newItem = await Navigator.of(context).push<CatalogItem>(
-      MaterialPageRoute(builder: (context) => const EditItemScreen()),
-    );
-    if (newItem != null) {
-      setState(() => _items.add(newItem));
+    try {
+      final categoryOptions = await _getItemCategoryOptions();
+      if (!mounted) return;
+      final newItem = await Navigator.of(context).push<CatalogItem>(
+        MaterialPageRoute(
+          builder:
+              (context) => EditItemScreen(categoryOptions: categoryOptions),
+        ),
+      );
+      if (newItem != null) await _catalogController.createItem(newItem);
+    } catch (error) {
+      if (mounted) _showError(error);
     }
   }
 
   void _openAddCategory() async {
-    final newCat = await Navigator.of(context).push<CatalogCategory>(
-      MaterialPageRoute(builder: (context) => const EditCategoryScreen()),
-    );
-    if (newCat != null) {
-      setState(() => _categories.add(newCat));
+    try {
+      final newCategory = await Navigator.of(context).push<CatalogCategory>(
+        MaterialPageRoute(builder: (context) => const EditCategoryScreen()),
+      );
+      if (newCategory != null) {
+        await _catalogController.createCategory(newCategory);
+      }
+    } catch (error) {
+      if (mounted) _showError(error);
     }
   }
 
   void _openAddDiscount() async {
-    final newDiscount = await Navigator.of(context).push<CatalogCategory>(
-      MaterialPageRoute(builder: (context) => const EditDiscountScreen()),
-    );
-    if (newDiscount != null) {
-      setState(() => _categories.add(newDiscount));
+    try {
+      final newDiscount = await Navigator.of(context).push<CatalogCategory>(
+        MaterialPageRoute(builder: (context) => const EditDiscountScreen()),
+      );
+      if (newDiscount != null) {
+        await _catalogController.createDiscount(newDiscount);
+      }
+    } catch (error) {
+      if (mounted) _showError(error);
     }
+  }
+
+  Future<void> _openItemDetails(CatalogItem item) async {
+    final categoryOptions = await _getItemCategoryOptions();
+    if (!mounted) return;
+    final result = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                ItemDetailsScreen(item: item, categoryOptions: categoryOptions),
+      ),
+    );
+    if (!mounted || result == null) return;
+
+    try {
+      if (result == 'deleted') {
+        await _catalogController.deleteItem(item.id);
+      } else if (result is CatalogItem) {
+        await _catalogController.updateItem(result);
+      }
+    } catch (error) {
+      if (mounted) _showError(error);
+    }
+  }
+
+  Future<List<String>> _getItemCategoryOptions() async {
+    final categories = await _catalogController.getCategories();
+    return categories
+        .where((category) => !category.isDiscount)
+        .map((category) => category.name)
+        .toSet()
+        .toList();
+  }
+
+  Future<void> _openCategoryDetails(CatalogCategory category) async {
+    final result = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute(
+        builder: (context) => CategoryDetailsScreen(category: category),
+      ),
+    );
+    if (!mounted || result == null || category.isBuiltIn) return;
+
+    try {
+      if (result == 'deleted') {
+        if (category.isDiscount) {
+          await _catalogController.deleteDiscount(category.id);
+        } else {
+          await _catalogController.deleteCategory(category.id);
+        }
+      } else if (result is CatalogCategory) {
+        if (result.isDiscount) {
+          await _catalogController.updateDiscount(result);
+        } else {
+          await _catalogController.updateCategory(result);
+        }
+      }
+    } catch (error) {
+      if (mounted) _showError(error);
+    }
+  }
+
+  void _showError(Object error) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Catalog update failed: $error')));
+  }
+
+  void _selectTab(int tabIndex) {
+    if (_selectedTabIndex == tabIndex) return;
+
+    setState(() {
+      _selectedTabIndex = tabIndex;
+      if (tabIndex == 0) {
+        _itemsStream = _catalogController.watchItems();
+      } else {
+        _categoriesStream = _catalogController.watchCategoriesAndDiscounts();
+      }
+    });
   }
 
   @override
@@ -144,7 +208,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedTabIndex = 0),
+                          onTap: () => _selectTab(0),
                           child: Container(
                             decoration: BoxDecoration(
                               color:
@@ -175,7 +239,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedTabIndex = 1),
+                          onTap: () => _selectTab(1),
                           child: Container(
                             decoration: BoxDecoration(
                               color:
@@ -216,23 +280,65 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Subview Content
-                _selectedTabIndex == 0
-                    ? ItemCatalogSubview(
-                      items: _items,
-                      isGridView: _isGridView,
-                      onAddItem: _openAddItem,
-                    )
-                    : CategoryCatalogSubview(
-                      categories: _categories,
-                      isGridView: _isGridView, // Forwarded grid view state
-                      onAddDiscount: _openAddDiscount,
-                      onAddCategory: _openAddCategory,
-                    ),
+                if (_selectedTabIndex == 0)
+                  StreamBuilder<List<CatalogItem>>(
+                    stream: _itemsStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return _CatalogLoadError(error: snapshot.error!);
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return ItemCatalogSubview(
+                        items: snapshot.data!,
+                        isGridView: _isGridView,
+                        onAddItem: _openAddItem,
+                        onItemTap: _openItemDetails,
+                      );
+                    },
+                  )
+                else
+                  StreamBuilder<List<CatalogCategory>>(
+                    stream: _categoriesStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return _CatalogLoadError(error: snapshot.error!);
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return CategoryCatalogSubview(
+                        categories: snapshot.data!,
+                        isGridView: _isGridView,
+                        onAddDiscount: _openAddDiscount,
+                        onAddCategory: _openAddCategory,
+                        onCategoryTap: _openCategoryDetails,
+                      );
+                    },
+                  ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CatalogLoadError extends StatelessWidget {
+  final Object error;
+
+  const _CatalogLoadError({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Text(
+        'Unable to load catalog: $error',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: AppColors.secondary[600]),
       ),
     );
   }

@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/catalog_models.dart';
-import 'edit_item_screen.dart';
-import 'item_details_screen.dart';
 
 class ItemCatalogSubview extends StatelessWidget {
   final List<CatalogItem> items;
   final bool isGridView;
   final VoidCallback onAddItem;
+  final ValueChanged<CatalogItem> onItemTap;
 
   const ItemCatalogSubview({
     super.key,
     required this.items,
     required this.isGridView,
     required this.onAddItem,
+    required this.onItemTap,
   });
 
   @override
@@ -51,7 +51,11 @@ class ItemCatalogSubview extends StatelessWidget {
               mainAxisSpacing: 12,
               childAspectRatio: 0.8,
             ),
-            itemBuilder: (context, index) => _ItemGridCard(item: items[index]),
+            itemBuilder:
+                (context, index) => _ItemGridCard(
+                  item: items[index],
+                  onTap: () => onItemTap(items[index]),
+                ),
           )
         else
           ListView.separated(
@@ -59,7 +63,11 @@ class ItemCatalogSubview extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _ItemListCard(item: items[index]),
+            itemBuilder:
+                (context, index) => _ItemListCard(
+                  item: items[index],
+                  onTap: () => onItemTap(items[index]),
+                ),
           ),
       ],
     );
@@ -68,8 +76,9 @@ class ItemCatalogSubview extends StatelessWidget {
 
 class _ItemListCard extends StatelessWidget {
   final CatalogItem item;
+  final VoidCallback onTap;
 
-  const _ItemListCard({required this.item});
+  const _ItemListCard({required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -132,14 +141,14 @@ class _ItemListCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Capacity: ${item.capacity}',
+                      'Capacity: ${item.capacityLabel}',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.secondary[500],
                       ),
                     ),
                     Text(
-                      'Time: ${item.duration}',
+                      'Time: ${item.durationLabel}',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.secondary[500],
@@ -157,14 +166,14 @@ class _ItemListCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                item.price,
+                item.priceLabel,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.accent,
                 ),
               ),
-              _ViewItemButton(item: item),
+              _ViewItemButton(onTap: onTap),
             ],
           ),
         ],
@@ -175,8 +184,9 @@ class _ItemListCard extends StatelessWidget {
 
 class _ItemGridCard extends StatelessWidget {
   final CatalogItem item;
+  final VoidCallback onTap;
 
-  const _ItemGridCard({required this.item});
+  const _ItemGridCard({required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +221,7 @@ class _ItemGridCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
           Text(
-            item.price,
+            item.priceLabel,
             style: const TextStyle(
               color: AppColors.accent,
               fontWeight: FontWeight.w700,
@@ -221,7 +231,7 @@ class _ItemGridCard extends StatelessWidget {
           const SizedBox(height: 6),
           Align(
             alignment: Alignment.centerRight,
-            child: _ViewItemButton(item: item, compact: true),
+            child: _ViewItemButton(onTap: onTap, compact: true),
           ),
         ],
       ),
@@ -230,21 +240,15 @@ class _ItemGridCard extends StatelessWidget {
 }
 
 class _ViewItemButton extends StatelessWidget {
-  final CatalogItem item;
+  final VoidCallback onTap;
   final bool compact;
 
-  const _ViewItemButton({required this.item, this.compact = false});
+  const _ViewItemButton({required this.onTap, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ItemDetailsScreen(item: item),
-          ),
-        );
-      },
+      onPressed: onTap,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,

@@ -8,8 +8,13 @@ import 'edit_item_screen.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
   final CatalogItem item;
+  final List<String> categoryOptions;
 
-  const ItemDetailsScreen({super.key, required this.item});
+  const ItemDetailsScreen({
+    super.key,
+    required this.item,
+    this.categoryOptions = const ['Services', 'Add-on'],
+  });
 
   @override
   State<ItemDetailsScreen> createState() => _ItemDetailsScreenState();
@@ -112,7 +117,11 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   void _navigateToEdit() async {
     final updated = await Navigator.of(context).push<CatalogItem>(
       MaterialPageRoute(
-        builder: (context) => EditItemScreen(itemToEdit: _currentItem),
+        builder:
+            (context) => EditItemScreen(
+              itemToEdit: _currentItem,
+              categoryOptions: widget.categoryOptions,
+            ),
       ),
     );
 
@@ -125,10 +134,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   Widget build(BuildContext context) {
     final pageBgColor = AppColors.primary[100]!;
 
-    final durationDisplay =
-        _currentItem.duration.trim().isEmpty
-            ? '00:00:00'
-            : _currentItem.duration;
+    final durationDisplay = _currentItem.durationLabel;
     final noteDisplay =
         _currentItem.note.trim().isEmpty
             ? 'No additional notes provided.'
@@ -203,7 +209,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        color: pageBgColor,
+        color: Colors.white,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
         child: SafeArea(
           child: Row(
@@ -329,10 +335,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                                 ),
                                 _ReadOnlyFieldBox(
                                   icon: Icons.sell_outlined,
-                                  value:
-                                      _currentItem.price.isEmpty
-                                          ? '₱0.00'
-                                          : _currentItem.price,
+                                  value: _currentItem.priceLabel,
                                 ),
                               ],
                             ),
@@ -349,9 +352,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                                 _ReadOnlyFieldBox(
                                   icon: Icons.dialpad_rounded,
                                   value:
-                                      _currentItem.tier.isEmpty
-                                          ? '1'
-                                          : _currentItem.tier,
+                                      '${_currentItem.quantity} / ${_currentItem.tier}',
                                 ),
                               ],
                             ),
@@ -362,10 +363,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                       const FieldLabel(label: 'CAPACITY', letterSpacing: 0),
                       _ReadOnlyFieldBox(
                         icon: Icons.scale_rounded,
-                        value:
-                            _currentItem.capacity.isEmpty
-                                ? '0 kg'
-                                : _currentItem.capacity,
+                        value: _currentItem.capacityLabel,
                       ),
                       const SizedBox(height: 12),
                       const FieldLabel(label: 'DURATION', letterSpacing: 0),

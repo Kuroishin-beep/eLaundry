@@ -9,8 +9,13 @@ import '../widgets/catalog_section_card.dart';
 
 class EditItemScreen extends StatefulWidget {
   final CatalogItem? itemToEdit;
+  final List<String> categoryOptions;
 
-  const EditItemScreen({super.key, this.itemToEdit});
+  const EditItemScreen({
+    super.key,
+    this.itemToEdit,
+    this.categoryOptions = const ['Services', 'Add-on'],
+  });
 
   @override
   State<EditItemScreen> createState() => _EditItemScreenState();
@@ -26,8 +31,8 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late final TextEditingController _maxWeightController;
   late final TextEditingController _noteController;
 
-  String _selectedCategory = 'Services';
-  String _selectedMachine = 'Standard';
+  late String _selectedCategory;
+  late String _selectedMachine;
 
   // Duration State
   int _hours = 0;
@@ -39,18 +44,59 @@ class _EditItemScreenState extends State<EditItemScreen> {
 
   bool get _isEditing => widget.itemToEdit != null;
 
+  List<String> get _availableCategoryOptions {
+    final options =
+        widget.categoryOptions
+            .where((category) => category.trim().isNotEmpty)
+            .toSet()
+            .toList();
+    final currentCategory = widget.itemToEdit?.category;
+    if (currentCategory != null &&
+        currentCategory.isNotEmpty &&
+        !options.contains(currentCategory)) {
+      options.insert(0, currentCategory);
+    }
+    return options.isEmpty ? ['Services', 'Add-on'] : options;
+  }
+
   @override
   void initState() {
     super.initState();
     final item = widget.itemToEdit;
+    final categories = _availableCategoryOptions;
+    const machines = ['Standard', 'Titan', 'Plus+'];
+    _selectedCategory =
+        categories.contains(item?.category) ? item!.category : categories.first;
+    _selectedMachine =
+        machines.contains(item?.machineType)
+            ? item!.machineType
+            : machines.first;
     _nameController = TextEditingController(text: item?.name ?? '');
     _priceController = TextEditingController(
-      text: item?.price.replaceAll('P', '') ?? '0',
+      text: item?.price.toString() ?? '0',
     );
-    _qtyController = TextEditingController(text: '1');
-    _minWeightController = TextEditingController(text: '0');
-    _maxWeightController = TextEditingController(text: '0');
+    _qtyController = TextEditingController(
+      text: item?.quantity.toString() ?? '1',
+    );
+    _minWeightController = TextEditingController(
+      text: item?.minWeightKg.toString() ?? '0',
+    );
+    _maxWeightController = TextEditingController(
+      text: item?.maxWeightKg.toString() ?? '0',
+    );
     _noteController = TextEditingController(text: item?.note ?? '');
+    final durationSeconds = item?.durationSeconds ?? 0;
+    _hours = durationSeconds ~/ 3600;
+    _minutes = (durationSeconds % 3600) ~/ 60;
+    _seconds = durationSeconds % 60;
+  }
+
+  String? _validateNonNegativeNumber(String? value, String label) {
+    final number = double.tryParse(value?.trim() ?? '');
+    if (number == null || !number.isFinite || number < 0) {
+      return 'Enter a valid $label';
+    }
+    return null;
   }
 
   @override
@@ -266,10 +312,11 @@ class _EditItemScreenState extends State<EditItemScreen> {
         name: _nameController.text.trim(),
         category: _selectedCategory,
         machineType: _selectedMachine,
-        price: 'P${_priceController.text.trim()}',
-        capacity:
-            '${_minWeightController.text}kg to ${_maxWeightController.text}kg',
-        duration: _formattedTime,
+        price: double.parse(_priceController.text.trim()),
+        quantity: int.parse(_qtyController.text.trim()),
+        minWeightKg: double.parse(_minWeightController.text.trim()),
+        maxWeightKg: double.parse(_maxWeightController.text.trim()),
+        durationSeconds: _hours * 3600 + _minutes * 60 + _seconds,
         note: _noteController.text.trim(),
       );
 
@@ -351,7 +398,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                         DropdownButtonFormField<String>(
                           value: _selectedCategory,
                           items:
-                              ['Services', 'Add-on']
+                              _availableCategoryOptions
                                   .map(
                                     (c) => DropdownMenuItem(
                                       value: c,
@@ -509,6 +556,11 @@ class _EditItemScreenState extends State<EditItemScreen> {
                                         size: 18,
                                       ),
                                     ),
+                                    validator:
+                                        (value) => _validateNonNegativeNumber(
+                                          value,
+                                          'price',
+                                        ),
                                   ),
                                 ],
                               ),
@@ -532,6 +584,14 @@ class _EditItemScreenState extends State<EditItemScreen> {
                                         size: 18,
                                       ),
                                     ),
+                                    validator: (value) {
+                                      final quantity = int.tryParse(
+                                        value?.trim() ?? '',
+                                      );
+                                      return quantity == null || quantity < 1
+                                          ? 'Enter a quantity of at least 1'
+                                          : null;
+                                    },
                                   ),
                                 ],
                               ),
@@ -560,6 +620,11 @@ class _EditItemScreenState extends State<EditItemScreen> {
                                       ),
                                       suffixText: 'kg',
                                     ),
+                                    validator:
+                                        (value) => _validateNonNegativeNumber(
+                                          value,
+                                          'minimum weight',
+                                        ),
                                   ),
                                 ],
                               ),
@@ -584,6 +649,24 @@ class _EditItemScreenState extends State<EditItemScreen> {
                                       ),
                                       suffixText: 'kg',
                                     ),
+                                    validator: (value) {
+                                      final maximum = double.tryParse(
+                                        value?.trim() ?? '',
+                                      );
+                                      final minimum = double.tryParse(
+                                        _minWeightController.text.trim(),
+                                      );
+                                      if (maximum == null ||
+                                          !maximum.isFinite ||
+                                          maximum < 0) {
+                                        return 'Enter a valid maximum weight';
+                                      }
+                                      if (minimum != null &&
+                                          maximum < minimum) {
+                                        return 'Must be at least the minimum weight';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ],
                               ),
@@ -648,31 +731,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton.icon(
-                            onPressed: _showDurationPicker,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.add_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Time',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
                         ),
                       ],
                     ),

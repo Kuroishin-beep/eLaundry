@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/catalog_models.dart';
-import 'category_details_screen.dart';
 
 class CategoryCatalogSubview extends StatelessWidget {
   final List<CatalogCategory> categories;
   final VoidCallback onAddDiscount;
   final VoidCallback onAddCategory;
+  final ValueChanged<CatalogCategory> onCategoryTap;
   final bool isGridView;
 
   const CategoryCatalogSubview({
@@ -15,16 +15,9 @@ class CategoryCatalogSubview extends StatelessWidget {
     required this.categories,
     required this.onAddDiscount,
     required this.onAddCategory,
+    required this.onCategoryTap,
     this.isGridView = false,
   });
-
-  void _onViewCategory(BuildContext context, CatalogCategory category) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CategoryDetailsScreen(category: category),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +74,7 @@ class CategoryCatalogSubview extends StatelessWidget {
             itemBuilder:
                 (context, index) => _CategoryGridCard(
                   category: categories[index],
-                  onView: () => _onViewCategory(context, categories[index]),
+                  onView: () => onCategoryTap(categories[index]),
                 ),
           )
         else
@@ -93,7 +86,7 @@ class CategoryCatalogSubview extends StatelessWidget {
             itemBuilder:
                 (context, index) => _CategoryListCard(
                   category: categories[index],
-                  onView: () => _onViewCategory(context, categories[index]),
+                  onView: () => onCategoryTap(categories[index]),
                 ),
           ),
       ],
@@ -157,7 +150,7 @@ class _CategoryListCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   category.isDiscount
-                      ? (category.minSpend ?? '')
+                      ? '${category.discountAmount.toStringAsFixed(2)} ${category.discountType} off, ${category.minSpendLabel}'
                       : 'Qty: ${category.quantity}',
                   style: TextStyle(
                     fontSize: 11.5,
@@ -246,7 +239,7 @@ class _CategoryGridCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             category.isDiscount
-                ? (category.minSpend ?? '')
+                ? '${category.discountAmount.toStringAsFixed(2)} ${category.discountType} off, ${category.minSpendLabel}'
                 : 'Qty: ${category.quantity}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
