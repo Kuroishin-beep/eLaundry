@@ -6,6 +6,7 @@ import '../views/laundry/machine_screen.dart';
 import '../views/settings/settings_screen.dart';
 import '../views/employee/employee_screen.dart';
 import '../views/catalog/catalog_screen.dart';
+import '../views/shift/shift_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -216,7 +217,17 @@ class _NavigationGridCard extends StatelessWidget {
           }
         },
       ),
-      _NavItemData(icon: Icons.alarm_rounded, label: 'Shift'),
+      _NavItemData(
+        icon: Icons.schedule_rounded,
+        label: 'Shift',
+        onTap: () {
+          if (context.findAncestorWidgetOfExactType<ShiftScreen>() == null) {
+            _navigateTo(context, const ShiftScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(
         icon: Icons.badge_rounded,
         label: 'Employee',
