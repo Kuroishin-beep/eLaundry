@@ -6,6 +6,7 @@ import '../../core/themes/theme.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../auth/login_screen.dart';
 import 'edit_settings_screen.dart';
+import '../../services/media_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -99,14 +100,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
-                  // Hook image picker here (ImageSource.camera)
+                  _uploadProfileImage();
                 },
                 child: const Text('Take Photo'),
               ),
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
-                  // Hook image picker here (ImageSource.gallery)
+                  _uploadProfileImage();
                 },
                 child: const Text('Choose from Gallery'),
               ),
@@ -127,6 +128,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
     );
+  }
+
+  Future<void> _uploadProfileImage() async {
+    final url = await MediaService().pickAndUpload(folder: 'profiles');
+    if (url == null || !mounted) return;
+    try {
+      await _settingsController.updateProfileImage(url);
+      setState(() => _profileImagePath = url);
+      _showSuccessSnackBar('Profile picture updated successfully');
+    } catch (e) {
+      _showErrorSnackBar('Failed to update profile picture: $e');
+    }
   }
 
   void _openEditor({

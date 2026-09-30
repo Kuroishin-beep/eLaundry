@@ -6,6 +6,7 @@ import '../../../models/catalog_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
 import '../widgets/catalog_section_card.dart';
+import '../../../shared/media_picker.dart';
 
 class EditItemScreen extends StatefulWidget {
   final CatalogItem? itemToEdit;
@@ -32,6 +33,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late final TextEditingController _minWeightController;
   late final TextEditingController _maxWeightController;
   late final TextEditingController _noteController;
+  String? _imageUrl;
 
   late String _selectedCategory;
   late String _selectedMachine;
@@ -83,6 +85,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   void initState() {
     super.initState();
     final item = widget.itemToEdit;
+    _imageUrl = item?.imageUrl;
     final categories = _availableCategoryOptions;
     final machines = _availableMachineOptions;
     _selectedCategory =
@@ -340,6 +343,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         maxWeightKg: double.parse(_maxWeightController.text.trim()),
         durationSeconds: _hours * 3600 + _minutes * 60 + _seconds,
         note: _noteController.text.trim(),
+        imageUrl: _imageUrl,
       );
 
       Navigator.of(context).pop(savedItem);
@@ -384,6 +388,12 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     CatalogSectionCard(
                       stepNumber: '1',

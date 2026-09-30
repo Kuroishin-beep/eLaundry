@@ -5,6 +5,7 @@ import '../../models/machine_model.dart';
 import '../../shared/field_label.dart';
 import '../../shared/input_decoration.dart';
 import '../../shared/section_card.dart';
+import '../../shared/media_picker.dart';
 
 class EditMachineScreen extends StatefulWidget {
   final MachineItem machine;
@@ -23,11 +24,13 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
   late final TextEditingController _notesController;
   late MachineType _selectedType;
   late bool _isAvailable;
+  String? _imageUrl;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.machine.name);
+    _imageUrl = widget.machine.imageUrl;
     _tierController = TextEditingController(text: widget.machine.tier);
     _quantityController = TextEditingController(
       text: widget.machine.count.toString(),
@@ -59,6 +62,7 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
         type: _selectedType,
         isAvailable: _isAvailable,
         note: _notesController.text.trim(),
+        imageUrl: _imageUrl,
       ),
     );
   }
@@ -123,6 +127,12 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     SectionCard(
                       stepNumber: '1',
                       title: 'BASIC INFORMATION',

@@ -307,6 +307,7 @@ class CatalogController {
     'tier': item.tier,
     'serviceType': item.serviceType,
     'note': item.note,
+    'imageUrl': item.imageUrl,
   };
 
   CatalogItem _itemFromDocument(
@@ -335,6 +336,7 @@ class CatalogController {
       tier: data['tier'] as String? ?? 'STANDARD',
       serviceType: data['serviceType'] as String? ?? 'SERVICE',
       note: data['note'] as String? ?? '',
+      imageUrl: data['imageUrl'] as String?,
     );
   }
 
@@ -352,6 +354,7 @@ class CatalogController {
     'isDiscount': category.isDiscount,
     'isBuiltIn': category.isBuiltIn,
     'note': category.note,
+    'imageUrl': category.imageUrl,
   };
 
   CatalogCategory _categoryFromDocument(
@@ -369,6 +372,7 @@ class CatalogController {
       isDiscount: data['isDiscount'] as bool? ?? false,
       isBuiltIn: data['isBuiltIn'] as bool? ?? false,
       note: data['note'] as String? ?? '',
+      imageUrl: data['imageUrl'] as String?,
     );
   }
 

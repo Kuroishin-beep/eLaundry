@@ -8,6 +8,7 @@ class MachineItem {
   final MachineType type;
   final bool isAvailable;
   final String note;
+  final String? imageUrl;
 
   const MachineItem({
     required this.id,
@@ -17,5 +18,6 @@ class MachineItem {
     required this.type,
     this.isAvailable = true,
     this.note = '',
+    this.imageUrl,
   });
 }

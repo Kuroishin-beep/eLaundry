@@ -35,27 +35,36 @@ class MachineCard extends StatelessWidget {
                     color: AppColors.neutral[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(
-                          color: AppColors.primary[300]!,
-                          width: 4,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.local_laundry_service_rounded,
-                          size: 32,
-                          color: AppColors.primary[600],
-                        ),
-                      ),
-                    ),
-                  ),
+                  child:
+                      item.imageUrl == null
+                          ? Center(
+                            child: Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: AppColors.primary[300]!,
+                                  width: 4,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.local_laundry_service_rounded,
+                                  size: 32,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          )
+                          : ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              item.imageUrl!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                 ),
               ),
               const SizedBox(height: 12),

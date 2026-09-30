@@ -5,6 +5,7 @@ import '../../../shared/input_decoration.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/section_card.dart';
 import 'widgets/role_permission_group.dart';
+import '../../../shared/media_picker.dart';
 
 class EditRoleScreen extends StatefulWidget {
   final RoleItem? roleToEdit;
@@ -20,6 +21,8 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descController;
   late RolePermissions _permissions;
+  late String _iconName;
+  String? _imageUrl;
 
   bool get _isEditing => widget.roleToEdit != null;
 
@@ -30,6 +33,8 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
     _nameController = TextEditingController(text: role?.name ?? '');
     _descController = TextEditingController(text: role?.description ?? '');
     _permissions = role?.permissions ?? const RolePermissions();
+    _iconName = role?.iconName ?? 'Point of Sale';
+    _imageUrl = role?.imageUrl;
   }
 
   @override
@@ -49,7 +54,8 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
         name: _nameController.text.trim(),
         assignedStaffCount: widget.roleToEdit?.assignedStaffCount ?? 0,
         description: _descController.text.trim(),
-        iconName: widget.roleToEdit?.iconName ?? 'Point of Sale',
+        iconName: _iconName,
+        imageUrl: _imageUrl,
         permissions: _permissions,
       );
 
@@ -155,41 +161,16 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
                       ),
                       const SizedBox(height: 16),
                       const FieldLabel(label: 'PICK AN ICON'),
-                      InkWell(
-                        onTap: () {},
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          height: 48,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFC7CFCE)),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.sentiment_satisfied_alt_rounded,
-                                size: 20,
-                                color: AppColors.secondary[600],
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Choose',
-                                style: TextStyle(
-                                  color: AppColors.secondary[400],
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 20,
-                                color: AppColors.secondary[400],
-                              ),
-                            ],
-                          ),
-                        ),
+                      IconPickerField(
+                        value: _iconName,
+                        onChanged: (value) => setState(() => _iconName = value),
+                      ),
+                      const SizedBox(height: 16),
+                      const FieldLabel(label: 'ROLE IMAGE'),
+                      ImageUploadField(
+                        folder: 'roles',
+                        initialUrl: _imageUrl,
+                        onChanged: (value) => _imageUrl = value,
                       ),
                       const SizedBox(height: 16),
                       const FieldLabel(label: 'ROLE DESCRIPTION'),

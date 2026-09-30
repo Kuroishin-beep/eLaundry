@@ -113,6 +113,7 @@ class MachineController {
     'type': machine.type.name,
     'isAvailable': machine.isAvailable,
     'note': machine.note,
+    'imageUrl': machine.imageUrl,
   };
 
   MachineItem _fromDocument(
@@ -131,6 +132,7 @@ class MachineController {
               : MachineType.washer,
       isAvailable: data['isAvailable'] as bool? ?? true,
       note: data['note'] as String? ?? '',
+      imageUrl: data['imageUrl'] as String?,
     );
   }
 }

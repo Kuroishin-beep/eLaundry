@@ -6,6 +6,7 @@ import '../../../models/employee_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
 import 'widgets/staff_section_card.dart';
+import '../../../shared/media_picker.dart';
 
 class EditStaffScreen extends StatefulWidget {
   final StaffMember? staffToEdit;
@@ -29,6 +30,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
   late final TextEditingController _pinController;
   late final TextEditingController _emailController;
   late final TextEditingController _contactController;
+  String? _imageUrl;
 
   String _selectedRole = 'Cashier';
   late final List<String> _roles;
@@ -39,6 +41,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
   void initState() {
     super.initState();
     final staff = widget.staffToEdit;
+    _imageUrl = staff?.imageUrl;
     _roles = widget.availableRoles.map((role) => role.name).toList();
     if (_roles.isEmpty && staff != null) _roles.add(staff.role);
     if (_roles.isNotEmpty) _selectedRole = _roles.first;
@@ -83,6 +86,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
         totalSales: widget.staffToEdit?.totalSales ?? '₱0.00',
         attendanceDays: widget.staffToEdit?.attendanceDays ?? 0,
         note: _noteController.text.trim(),
+        imageUrl: _imageUrl,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,6 +144,12 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     StaffSectionCard(
                       stepNumber: '1',

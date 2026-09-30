@@ -5,6 +5,7 @@ import '../../../models/catalog_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
 import '../widgets/catalog_section_card.dart';
+import '../../../shared/media_picker.dart';
 
 class EditCategoryScreen extends StatefulWidget {
   final CatalogCategory? categoryToEdit;
@@ -19,6 +20,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _notesController;
+  String? _imageUrl;
 
   bool get _isEditing => widget.categoryToEdit != null;
 
@@ -28,6 +30,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     _nameController = TextEditingController(
       text: widget.categoryToEdit?.name ?? '',
     );
+    _imageUrl = widget.categoryToEdit?.imageUrl;
     _notesController = TextEditingController(
       text: widget.categoryToEdit?.note ?? '',
     );
@@ -50,6 +53,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
         name: _nameController.text.trim(),
         quantity: widget.categoryToEdit?.quantity ?? 0,
         note: _notesController.text.trim(),
+        imageUrl: _imageUrl,
       );
 
       Navigator.of(context).pop(savedCat);
@@ -115,6 +119,12 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     CatalogSectionCard(
                       stepNumber: '1',

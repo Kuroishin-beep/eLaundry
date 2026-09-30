@@ -11,6 +11,7 @@ class CatalogItem {
   final String tier;
   final String serviceType;
   final String note;
+  final String? imageUrl;
 
   const CatalogItem({
     required this.id,
@@ -25,6 +26,7 @@ class CatalogItem {
     this.tier = 'STANDARD',
     this.serviceType = 'SERVICE',
     this.note = '',
+    this.imageUrl,
   });
 
   String get priceLabel => 'P${price.toStringAsFixed(2)}';
@@ -40,6 +42,22 @@ class CatalogItem {
         '${minutes.toString().padLeft(2, '0')}:'
         '${seconds.toString().padLeft(2, '0')}';
   }
+
+  CatalogItem copyWith({String? imageUrl}) => CatalogItem(
+    id: id,
+    name: name,
+    category: category,
+    machineType: machineType,
+    price: price,
+    quantity: quantity,
+    minWeightKg: minWeightKg,
+    maxWeightKg: maxWeightKg,
+    durationSeconds: durationSeconds,
+    tier: tier,
+    serviceType: serviceType,
+    note: note,
+    imageUrl: imageUrl ?? this.imageUrl,
+  );
 }
 
 class CatalogCategory {
@@ -52,6 +70,7 @@ class CatalogCategory {
   final bool isDiscount;
   final bool isBuiltIn;
   final String note;
+  final String? imageUrl;
 
   const CatalogCategory({
     required this.id,
@@ -63,22 +82,25 @@ class CatalogCategory {
     this.isDiscount = false,
     this.isBuiltIn = false,
     this.note = '',
+    this.imageUrl,
   });
 
   String get minSpendLabel =>
       minSpend == null ? '' : 'Min. Spend P${minSpend!.toStringAsFixed(2)}';
 
-  CatalogCategory copyWith({int? quantity}) => CatalogCategory(
-    id: id,
-    name: name,
-    quantity: quantity ?? this.quantity,
-    minSpend: minSpend,
-    discountAmount: discountAmount,
-    discountType: discountType,
-    isDiscount: isDiscount,
-    isBuiltIn: isBuiltIn,
-    note: note,
-  );
+  CatalogCategory copyWith({int? quantity, String? imageUrl}) =>
+      CatalogCategory(
+        id: id,
+        name: name,
+        quantity: quantity ?? this.quantity,
+        minSpend: minSpend,
+        discountAmount: discountAmount,
+        discountType: discountType,
+        isDiscount: isDiscount,
+        isBuiltIn: isBuiltIn,
+        note: note,
+        imageUrl: imageUrl ?? this.imageUrl,
+      );
 }
 
 const builtInCatalogCategories = <CatalogCategory>[

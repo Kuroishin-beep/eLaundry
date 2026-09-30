@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
 import '../../../controllers/employee_controller.dart';
 import '../../../models/employee_models.dart';
+import '../../../shared/media_picker.dart';
 import '../../../shared/search_filter_bar.dart';
 import 'edit_role_screen.dart';
 import 'role_details_screen.dart';
@@ -135,8 +136,8 @@ class _RoleSubViewState extends State<RoleSubView> {
                         border: Border.all(color: AppColors.neutral[500]!),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.point_of_sale_rounded,
+                      child: Icon(
+                        iconForName(role.iconName),
                         color: AppColors.accent,
                         size: 24,
                       ),

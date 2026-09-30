@@ -5,6 +5,7 @@ import '../../../models/catalog_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
 import '../widgets/catalog_section_card.dart';
+import '../../../shared/media_picker.dart';
 
 class EditDiscountScreen extends StatefulWidget {
   final CatalogCategory? categoryToEdit;
@@ -24,6 +25,7 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
   late final TextEditingController _minWeightController;
   late final TextEditingController _minSpendController;
   late final TextEditingController _notesController;
+  String? _imageUrl;
 
   // 1. Discount Type ('Percentage' or 'Fixed')
   String _discountType = 'Percentage';
@@ -48,6 +50,7 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
   void initState() {
     super.initState();
     final discount = widget.categoryToEdit;
+    _imageUrl = discount?.imageUrl;
     _discountType = discount?.discountType ?? 'Percentage';
     _nameController = TextEditingController(text: discount?.name ?? '');
     _amountController = TextEditingController(
@@ -245,6 +248,7 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
         discountType: _discountType,
         isDiscount: true,
         note: _notesController.text.trim(),
+        imageUrl: _imageUrl,
       );
 
       Navigator.of(context).pop(savedDiscount);
@@ -289,6 +293,12 @@ class _EditDiscountScreenState extends State<EditDiscountScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     CatalogSectionCard(
                       stepNumber: '1',

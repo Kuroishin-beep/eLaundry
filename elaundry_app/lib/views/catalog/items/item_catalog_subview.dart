@@ -124,13 +124,22 @@ class _ItemListCard extends StatelessWidget {
                   color: AppColors.neutral[300],
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.local_laundry_service_rounded,
-                    size: 36,
-                    color: Color(0xFF637371),
-                  ),
-                ),
+                child:
+                    item.imageUrl == null
+                        ? const Center(
+                          child: Icon(
+                            Icons.local_laundry_service_rounded,
+                            size: 36,
+                            color: Color(0xFF637371),
+                          ),
+                        )
+                        : ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -228,13 +237,19 @@ class _ItemGridCard extends StatelessWidget {
                 color: AppColors.neutral[300],
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.local_laundry_service_rounded,
-                  size: 36,
-                  color: Color(0xFF637371),
-                ),
-              ),
+              child:
+                  item.imageUrl == null
+                      ? const Center(
+                        child: Icon(
+                          Icons.local_laundry_service_rounded,
+                          size: 36,
+                          color: Color(0xFF637371),
+                        ),
+                      )
+                      : ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(item.imageUrl!, fit: BoxFit.cover),
+                      ),
             ),
           ),
           const SizedBox(height: 8),

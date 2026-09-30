@@ -68,6 +68,15 @@ class SettingsController {
     await _firestore.collection('users').doc(uid).update({'fullName': newName});
   }
 
+  Future<void> updateProfileImage(String? imageUrl) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    await _firestore.collection('users').doc(uid).set({
+      'profileImage': imageUrl,
+    }, SetOptions(merge: true));
+    await _auth.currentUser?.updatePhotoURL(imageUrl);
+  }
+
   /// Update Email Address
   Future<void> updateEmail(String newEmail) async {
     final uid = currentUserId;

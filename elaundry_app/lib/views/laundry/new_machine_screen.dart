@@ -5,6 +5,7 @@ import '../../models/machine_model.dart';
 import '../../shared/field_label.dart';
 import '../../shared/input_decoration.dart';
 import '../../shared/section_card.dart';
+import '../../shared/media_picker.dart';
 
 class NewMachineScreen extends StatefulWidget {
   const NewMachineScreen({super.key});
@@ -19,6 +20,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
   final _tierController = TextEditingController(text: 'STANDARD');
   final _quantityController = TextEditingController(text: '1');
   final _notesController = TextEditingController();
+  String? _imageUrl;
 
   String _selectedCategory = 'Washers';
   final List<String> _categories = ['Washers', 'Dryers'];
@@ -46,6 +48,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                 ? MachineType.dryer
                 : MachineType.washer,
         note: _notesController.text.trim(),
+        imageUrl: _imageUrl,
       );
 
       Navigator.of(context).pop(newMachine);
@@ -90,6 +93,12 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ImageUploadField(
+                      folder: 'entities',
+                      initialUrl: _imageUrl,
+                      onChanged: (value) => _imageUrl = value,
+                    ),
+                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     SectionCard(
                       stepNumber: '1',

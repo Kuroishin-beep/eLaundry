@@ -13,6 +13,7 @@ class StaffMember {
   final String totalSales;
   final int attendanceDays;
   final String note;
+  final String? imageUrl;
 
   const StaffMember({
     required this.id,
@@ -27,6 +28,7 @@ class StaffMember {
     this.totalSales = '₱0.00',
     this.attendanceDays = 0,
     this.note = '',
+    this.imageUrl,
   });
 
   StaffMember copyWith({
@@ -42,6 +44,7 @@ class StaffMember {
     String? totalSales,
     int? attendanceDays,
     String? note,
+    String? imageUrl,
   }) {
     return StaffMember(
       id: id ?? this.id,
@@ -56,6 +59,7 @@ class StaffMember {
       totalSales: totalSales ?? this.totalSales,
       attendanceDays: attendanceDays ?? this.attendanceDays,
       note: note ?? this.note,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -73,6 +77,7 @@ class StaffMember {
       totalSales: map['total_sales'] as String? ?? '₱0.00',
       attendanceDays: (map['attendance_days'] as num?)?.toInt() ?? 0,
       note: map['note'] as String? ?? '',
+      imageUrl: map['imageUrl'] as String?,
     );
   }
 
@@ -88,6 +93,7 @@ class StaffMember {
     'total_sales': totalSales,
     'attendance_days': attendanceDays,
     'note': note,
+    'imageUrl': imageUrl,
   };
 }
 
@@ -195,6 +201,7 @@ class RoleItem {
   final String description;
   final String iconName;
   final RolePermissions permissions;
+  final String? imageUrl;
 
   const RoleItem({
     required this.id,
@@ -203,6 +210,7 @@ class RoleItem {
     required this.description,
     this.iconName = 'Point of Sale',
     this.permissions = const RolePermissions(),
+    this.imageUrl,
   });
 
   static const RoleItem empty = RoleItem(
@@ -219,6 +227,7 @@ class RoleItem {
     String? description,
     String? iconName,
     RolePermissions? permissions,
+    String? imageUrl,
   }) {
     return RoleItem(
       id: id ?? this.id,
@@ -227,6 +236,7 @@ class RoleItem {
       description: description ?? this.description,
       iconName: iconName ?? this.iconName,
       permissions: permissions ?? this.permissions,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -240,6 +250,7 @@ class RoleItem {
       permissions: RolePermissions.fromMap(
         map['permissions'] as Map<String, dynamic>?,
       ),
+      imageUrl: map['imageUrl'] as String?,
     );
   }
 
@@ -249,6 +260,7 @@ class RoleItem {
     'description': description,
     'iconName': iconName,
     'permissions': permissions.toMap(),
+    'imageUrl': imageUrl,
   };
 
   @override
