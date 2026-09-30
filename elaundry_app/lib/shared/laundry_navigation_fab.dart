@@ -1,3 +1,4 @@
+import 'package:elaundry_app/views/transaction_history/transaction_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -198,7 +199,19 @@ class _NavigationGridCard extends StatelessWidget {
           }
         },
       ),
-      _NavItemData(icon: Icons.receipt, label: 'Transaction\nHistory'),
+      _NavItemData(
+        icon: Icons.receipt,
+        label: 'Transaction\nHistory',
+        onTap: () {
+          if (context
+                  .findAncestorWidgetOfExactType<TransactionHistoryScreen>() ==
+              null) {
+            _navigateTo(context, const TransactionHistoryScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(
         icon: Icons.local_laundry_service_rounded,
         label: 'Laundry Machine',
@@ -207,7 +220,6 @@ class _NavigationGridCard extends StatelessWidget {
             onClose();
             onMachinesTap!();
           } else {
-            // Avoid pushing if already on the Machines screen
             if (context.findAncestorWidgetOfExactType<MachinesScreen>() ==
                 null) {
               _navigateTo(context, const MachinesScreen());
