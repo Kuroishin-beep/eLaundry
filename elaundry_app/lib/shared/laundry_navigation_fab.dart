@@ -1,14 +1,15 @@
-import 'package:elaundry_app/views/transaction_history/transaction_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../core/themes/theme.dart';
-import '../views/laundry/machine_screen.dart';
-import '../views/settings/settings_screen.dart';
-import '../views/employee/employee_screen.dart';
 import '../views/catalog/catalog_screen.dart';
-import '../views/shift/shift_screen.dart';
+import '../views/employee/employee_screen.dart';
+import '../views/laundry/machine_screen.dart';
 import '../views/orders/orders_screen.dart';
+import '../views/reports/report_screen.dart';
+import '../views/settings/settings_screen.dart';
+import '../views/shift/shift_screen.dart';
+import '../views/transaction_history/transaction_history_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -27,7 +28,7 @@ class LaundryNavigationFab extends StatefulWidget {
 class _LaundryNavigationFabState extends State<LaundryNavigationFab>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animController;
-  late final Animation<double> _containerSpinAnimation;
+  late final Animation<double> _spinAnimation;
   bool _isOpen = false;
 
   @override
@@ -35,11 +36,11 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 300),
     );
 
-    // 1 full spin + 45-degree turn (1.125 turns total) to settle into the diamond
-    _containerSpinAnimation = Tween<double>(begin: 0.0, end: 1.125).animate(
+    // 1 full spin + 45-degree rotation (1.125 turns) to settle as a 45° diamond
+    _spinAnimation = Tween<double>(begin: 0.0, end: 1.125).animate(
       CurvedAnimation(
         parent: _animController,
         curve: Curves.easeInOutCubicEmphasized,
@@ -53,7 +54,7 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
     super.dispose();
   }
 
-  void _toggleMenu() {
+  void _openFullScreenMenu() {
     if (_isOpen) return;
 
     setState(() => _isOpen = true);
@@ -62,37 +63,71 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'NavigationMenu',
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      transitionDuration: const Duration(milliseconds: 300),
+      barrierLabel: 'FullScreenNavMenu',
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (dialogContext, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (dialogContext, anim1, anim2, child) {
-        final curvedAnim = CurvedAnimation(
+        final curved = CurvedAnimation(
           parent: anim1,
           curve: Curves.easeOutCubic,
         );
+        final topPadding = MediaQuery.of(dialogContext).padding.top;
+        final bottomPadding = MediaQuery.of(dialogContext).padding.bottom;
 
         return Stack(
           alignment: Alignment.bottomCenter,
           children: [
+            // 2x4 full-screen grid
             Positioned(
-              bottom: 96,
-              left: 16,
-              right: 16,
+              top: topPadding + 14,
+              bottom: bottomPadding + 86,
+              left: 18,
+              right: 18,
               child: FadeTransition(
-                opacity: curvedAnim,
+                opacity: curved,
                 child: ScaleTransition(
-                  alignment: Alignment.bottomCenter,
-                  scale: Tween<double>(
-                    begin: 0.85,
-                    end: 1.0,
-                  ).animate(curvedAnim),
+                  scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
                   child: Material(
                     color: Colors.transparent,
-                    child: _NavigationGridCard(
+                    child: _FullScreenGridMenu(
                       onClose: () => Navigator.of(dialogContext).pop(),
                       onSettingsTap: widget.onSettingsTap,
                       onMachinesTap: widget.onMachinesTap,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Pinned Diamond Close Button
+            Positioned(
+              bottom: bottomPadding + 16,
+              child: GestureDetector(
+                onTap: () => Navigator.of(dialogContext).pop(),
+                child: RotationTransition(
+                  turns: _spinAnimation,
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    // Rotating a + icon by 45° with the container creates an upright X
+                    child: const Center(
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
                     ),
                   ),
                 ),
@@ -103,18 +138,19 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
       },
     ).then((_) {
       if (mounted) {
-        setState(() => _isOpen = false);
-        _animController.reverse();
+        _animController.reverse().then((_) {
+          if (mounted) setState(() => _isOpen = false);
+        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _toggleMenu,
-      child: RotationTransition(
-        turns: _containerSpinAnimation,
+    return Opacity(
+      opacity: _isOpen ? 0.0 : 1.0,
+      child: GestureDetector(
+        onTap: _isOpen ? null : _openFullScreenMenu,
         child: Container(
           width: 58,
           height: 58,
@@ -130,26 +166,15 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
             ],
           ),
           child: Center(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child:
-                  _isOpen
-                      ? const Icon(
-                        Icons.close_rounded,
-                        key: ValueKey('close_icon'),
-                        color: Colors.white,
-                        size: 28,
-                      )
-                      : SvgPicture.asset(
-                        'assets/icons/washing-machine-icon.svg',
-                        key: const ValueKey('washing_machine_svg'),
-                        width: 28,
-                        height: 28,
-                        colorFilter: const ColorFilter.mode(
-                          Colors.white,
-                          BlendMode.srcIn,
-                        ),
-                      ),
+            child: SvgPicture.asset(
+              'assets/icons/washing-machine-icon.svg',
+              key: const ValueKey('washing_machine_svg'),
+              width: 28,
+              height: 28,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ),
@@ -158,12 +183,12 @@ class _LaundryNavigationFabState extends State<LaundryNavigationFab>
   }
 }
 
-class _NavigationGridCard extends StatelessWidget {
+class _FullScreenGridMenu extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onMachinesTap;
 
-  const _NavigationGridCard({
+  const _FullScreenGridMenu({
     required this.onClose,
     this.onSettingsTap,
     this.onMachinesTap,
@@ -171,7 +196,6 @@ class _NavigationGridCard extends StatelessWidget {
 
   void _navigateTo(BuildContext context, Widget screen) {
     onClose();
-    // Replaces current primary screen so history doesn't cycle infinitely
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => screen,
@@ -185,8 +209,6 @@ class _NavigationGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRouteName = ModalRoute.of(context)?.settings.name;
-
     final navItems = [
       _NavItemData(
         icon: Icons.receipt_long_rounded,
@@ -200,8 +222,8 @@ class _NavigationGridCard extends StatelessWidget {
         },
       ),
       _NavItemData(
-        icon: Icons.receipt,
-        label: 'Transaction\nHistory',
+        icon: Icons.receipt_rounded,
+        label: 'Transaction History',
         onTap: () {
           if (context
                   .findAncestorWidgetOfExactType<TransactionHistoryScreen>() ==
@@ -262,7 +284,17 @@ class _NavigationGridCard extends StatelessWidget {
           }
         },
       ),
-      _NavItemData(icon: Icons.insert_chart_rounded, label: 'Reports'),
+      _NavItemData(
+        icon: Icons.insert_chart_rounded,
+        label: 'Reports',
+        onTap: () {
+          if (context.findAncestorWidgetOfExactType<ReportScreen>() == null) {
+            _navigateTo(context, const ReportScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(
         icon: Icons.settings_rounded,
         label: 'Settings',
@@ -271,7 +303,6 @@ class _NavigationGridCard extends StatelessWidget {
             onClose();
             onSettingsTap!();
           } else {
-            // Avoid pushing if already on the Settings screen
             if (context.findAncestorWidgetOfExactType<SettingsScreen>() ==
                 null) {
               _navigateTo(context, const SettingsScreen());
@@ -283,34 +314,36 @@ class _NavigationGridCard extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 420),
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x24000000),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: navItems.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 18,
-          childAspectRatio: 0.82,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const crossAxisCount = 2;
+            const rowCount = 4;
+            const spacing = 12.0;
+            final itemWidth = (constraints.maxWidth - spacing) / crossAxisCount;
+            final itemHeight =
+                (constraints.maxHeight - (spacing * (rowCount - 1))) / rowCount;
+            final aspectRatio = itemWidth / itemHeight;
+
+            return GridView.builder(
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: navItems.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing,
+                childAspectRatio: aspectRatio,
+              ),
+              itemBuilder: (context, index) {
+                final item = navItems[index];
+                return _SquareNavCard(item: item, onCloseParent: onClose);
+              },
+            );
+          },
         ),
-        itemBuilder: (context, index) {
-          final item = navItems[index];
-          return _NavGridTile(item: item, onCloseParent: onClose);
-        },
       ),
     );
   }
@@ -324,52 +357,58 @@ class _NavItemData {
   const _NavItemData({required this.icon, required this.label, this.onTap});
 }
 
-class _NavGridTile extends StatelessWidget {
+class _SquareNavCard extends StatelessWidget {
   final _NavItemData item;
   final VoidCallback onCloseParent;
 
-  const _NavGridTile({required this.item, required this.onCloseParent});
+  const _SquareNavCard({required this.item, required this.onCloseParent});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        if (item.onTap != null) {
-          item.onTap!();
-        } else {
-          onCloseParent();
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: AppColors.primary[600],
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(item.icon, color: Colors.white, size: 26),
-          ),
-          const SizedBox(height: 6),
-          Expanded(
-            child: Text(
-              item.label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF333333),
-                height: 1.15,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      elevation: 4,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      child: InkWell(
+        onTap: () {
+          if (item.onTap != null) {
+            item.onTap!();
+          } else {
+            onCloseParent();
+          }
+        },
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 74,
+                height: 74,
+                decoration: BoxDecoration(
+                  color: AppColors.primary[600],
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(item.icon, color: Colors.white, size: 48),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+              const SizedBox(height: 10),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.normal,
+                  color: Color(0xFF2C2D2D),
+                  height: 1.2,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
