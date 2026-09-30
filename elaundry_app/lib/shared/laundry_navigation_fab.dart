@@ -7,6 +7,7 @@ import '../views/settings/settings_screen.dart';
 import '../views/employee/employee_screen.dart';
 import '../views/catalog/catalog_screen.dart';
 import '../views/shift/shift_screen.dart';
+import '../views/orders/orders_screen.dart';
 
 class LaundryNavigationFab extends StatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -186,7 +187,17 @@ class _NavigationGridCard extends StatelessWidget {
     final currentRouteName = ModalRoute.of(context)?.settings.name;
 
     final navItems = [
-      _NavItemData(icon: Icons.local_mall_rounded, label: 'Orders'),
+      _NavItemData(
+        icon: Icons.receipt_long_rounded,
+        label: 'Orders',
+        onTap: () {
+          if (context.findAncestorWidgetOfExactType<OrdersScreen>() == null) {
+            _navigateTo(context, const OrdersScreen());
+          } else {
+            onClose();
+          }
+        },
+      ),
       _NavItemData(icon: Icons.receipt, label: 'Transaction\nHistory'),
       _NavItemData(
         icon: Icons.local_laundry_service_rounded,

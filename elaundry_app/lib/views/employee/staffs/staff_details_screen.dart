@@ -223,7 +223,7 @@ class _StaffDetailsScreenState extends State<StaffDetailsScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        color: pageBgColor,
+        color: Colors.white,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
         child: SafeArea(
           child: Row(
