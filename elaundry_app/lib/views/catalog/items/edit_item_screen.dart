@@ -65,22 +65,24 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   List<String> get _availableMachineOptions {
-    final options =
-        widget.machineOptions
-            .where((machine) => machine.trim().isNotEmpty)
-            .toSet()
-            .toList();
+    final options = <String>[
+      'None',
+      ...widget.machineOptions
+          .where((machine) => machine.trim().isNotEmpty)
+          .where((machine) => machine.trim().toLowerCase() != 'none')
+          .toSet(),
+    ];
     final currentMachine = widget.itemToEdit?.machineType;
     if (currentMachine != null &&
         currentMachine.isNotEmpty &&
+        currentMachine.trim().toLowerCase() != 'none' &&
         !options.contains(currentMachine)) {
-      options.insert(0, currentMachine);
+      options.insert(1, currentMachine);
     }
     return options;
   }
 
-  bool get _hasMachineOptions =>
-      widget.machineOptions.any((machine) => machine.trim().isNotEmpty);
+  bool get _hasMachineOptions => true;
 
   @override
   void initState() {
@@ -93,11 +95,10 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _selectedCategory =
         categories.contains(item?.category) ? item!.category : categories.first;
     _selectedMachine =
-        machines.contains(item?.machineType)
-            ? item!.machineType
-            : machines.isNotEmpty
-            ? machines.first
-            : '';
+        item?.machineType.trim().isNotEmpty == true &&
+                machines.contains(item!.machineType)
+            ? item.machineType
+            : 'None';
     _nameController = TextEditingController(text: item?.name ?? '');
     _priceController = TextEditingController(
       text: item?.price.toString() ?? '0',

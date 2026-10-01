@@ -37,19 +37,94 @@ class _MachineDetailsScreenState extends State<MachineDetailsScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: const Text('Delete machine?'),
-            content: Text('Remove "${_machine.name}" from this store?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+          (dialogCtx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+            contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            content: SizedBox(
+              width: 320,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Delete machine?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2C2D2D),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Remove "${_machine.name}" from this store?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.secondary[600],
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Divider(color: AppColors.neutral[400], height: 1),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(dialogCtx).pop(false),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC7C9C8),
+                              elevation: 0,
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color(0xFF333333),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(dialogCtx).pop(true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              elevation: 0,
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                            ),
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
+            ),
           ),
     );
 

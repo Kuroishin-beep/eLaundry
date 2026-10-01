@@ -5,6 +5,11 @@ import '../../../models/catalog_models.dart';
 import '../../../shared/empty_states.dart';
 import '../../../shared/media_picker.dart';
 
+bool _hasMachineTag(String machineType) {
+  final value = machineType.trim();
+  return value.isNotEmpty && value.toLowerCase() != 'none';
+}
+
 class ItemCatalogSubview extends StatelessWidget {
   final List<CatalogItem> items;
   final bool isGridView;
@@ -147,7 +152,7 @@ class _ItemListCard extends StatelessWidget {
                           label: item.serviceType,
                           color: const Color(0xFF86A8A4),
                         ),
-                        if (item.machineType.trim().isNotEmpty) ...[
+                        if (_hasMachineTag(item.machineType)) ...[
                           const SizedBox(width: 6),
                           _ItemTag(
                             label: item.machineType.toUpperCase(),
@@ -231,7 +236,7 @@ class _ItemGridCard extends StatelessWidget {
             item.name,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
-          if (item.machineType.trim().isNotEmpty) ...[
+          if (_hasMachineTag(item.machineType)) ...[
             const SizedBox(height: 6),
             _ItemTag(label: item.machineType, color: AppColors.accent),
           ],

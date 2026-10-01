@@ -398,28 +398,31 @@ class _AddToCartScreenState extends State<AddToCartScreen> {
                       children: [
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    i.tier == 'PLUS+'
-                                        ? const Color(0xFF7E1035)
-                                        : AppColors.accent,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: Text(
-                                i.tier,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w700,
+                            if (i.tier.trim().isNotEmpty &&
+                                i.tier.trim().toLowerCase() != 'none') ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      i.tier == 'PLUS+'
+                                          ? const Color(0xFF7E1035)
+                                          : AppColors.accent,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  i.tier,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
+                              const SizedBox(width: 6),
+                            ],
                             Expanded(
                               child: Text(
                                 i.name,
