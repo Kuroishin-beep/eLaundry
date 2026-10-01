@@ -8,6 +8,7 @@ import '../../models/transaction_model.dart';
 import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
+import '../../shared/sort_dialog.dart';
 import 'transaction_details_screen.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   final TransactionController _transactionController = TransactionController();
   final _searchController = TextEditingController();
   bool _isGridView = false;
+  ListSortOption _sortOption = ListSortOption.dateNewest;
   final List<TransactionModel> _transactions = [];
   StreamSubscription<List<TransactionModel>>? _transactionsSubscription;
   Object? _loadError;
@@ -96,6 +98,37 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return Icons.local_laundry_service_outlined;
   }
 
+  Future<void> _openSortDialog() async {
+    final option = await showListSortDialog(
+      context,
+      selected: _sortOption,
+      title: 'Filter transactions',
+    );
+    if (option != null && mounted) setState(() => _sortOption = option);
+  }
+
+  void _sortTransactions(List<TransactionModel> transactions) {
+    transactions.sort((left, right) {
+      switch (_sortOption) {
+        case ListSortOption.nameAscending:
+          return left.customerName.toLowerCase().compareTo(
+            right.customerName.toLowerCase(),
+          );
+        case ListSortOption.priceDescending:
+          return right.total.compareTo(left.total);
+        case ListSortOption.priceAscending:
+          return left.total.compareTo(right.total);
+        case ListSortOption.dateNewest:
+          return _dateValue(right.dateTime).compareTo(_dateValue(left.dateTime));
+        case ListSortOption.dateOldest:
+          return _dateValue(left.dateTime).compareTo(_dateValue(right.dateTime));
+      }
+    });
+  }
+
+  DateTime _dateValue(String value) =>
+      DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+
   @override
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
@@ -107,6 +140,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   t.id.toLowerCase().contains(query),
             )
             .toList();
+    _sortTransactions(filtered);
 
     return Scaffold(
       backgroundColor: AppColors.neutral[400],
@@ -136,7 +170,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 CapsuleSearchFilterBar(
                   controller: _searchController,
                   onChanged: (_) => setState(() {}),
-                  onFilterTap: () {},
+                  onFilterTap: _openSortDialog,
                   isGridView: _isGridView,
                   onToggleView:
                       () => setState(() => _isGridView = !_isGridView),

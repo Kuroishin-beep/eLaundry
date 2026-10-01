@@ -5,6 +5,7 @@ import '../../../controllers/employee_controller.dart';
 import '../../../models/employee_models.dart';
 import '../../../shared/empty_states.dart';
 import '../../../shared/search_filter_bar.dart';
+import '../../../shared/staff_filter_dialog.dart';
 import 'edit_staff_screen.dart';
 import 'staff_details_screen.dart';
 
@@ -20,7 +21,8 @@ class StaffSubView extends StatefulWidget {
 class _StaffSubViewState extends State<StaffSubView> {
   final _searchController = TextEditingController();
   final _employeeController = EmployeeController();
-  String _selectedFilter = 'All';
+  Set<String> _selectedRoles = {};
+  bool _sortAlphabetically = false;
   List<StaffMember> _staffList = [];
   List<RoleItem> _roles = [];
 
@@ -50,74 +52,26 @@ class _StaffSubViewState extends State<StaffSubView> {
           staff.role.toLowerCase().contains(
             _searchController.text.toLowerCase().trim(),
           );
-      if (_selectedFilter == 'Clocked In') {
-        return matchesQuery && staff.isClockedIn;
-      }
-      if (_selectedFilter == 'Clocked Out') {
-        return matchesQuery && !staff.isClockedIn;
-      }
-      return matchesQuery;
+      return matchesQuery &&
+          (_selectedRoles.isEmpty || _selectedRoles.contains(staff.role));
     }).toList();
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Filter Staff Status',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.secondary[900],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...['All', 'Clocked In', 'Clocked Out'].map((filter) {
-                  final isSelected = _selectedFilter == filter;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      filter,
-                      style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color:
-                            isSelected
-                                ? AppColors.primary
-                                : AppColors.secondary[800],
-                      ),
-                    ),
-                    trailing:
-                        isSelected
-                            ? const Icon(
-                              Icons.check_rounded,
-                              color: AppColors.primary,
-                            )
-                            : null,
-                    onTap: () {
-                      setState(() => _selectedFilter = filter);
-                      Navigator.of(context).pop();
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
+  Future<void> _showFilterSheet() async {
+    final roles =
+        _roles.map((role) => role.name).where((name) => name.isNotEmpty).toSet()
+            .toList();
+    final selection = await showStaffFilterDialog(
+      context,
+      roles: roles,
+      selectedRoles: _selectedRoles,
+      alphabetical: _sortAlphabetically,
     );
+    if (selection == null || !mounted) return;
+    setState(() {
+      _selectedRoles = selection.roles;
+      _sortAlphabetically = selection.alphabetical;
+    });
   }
 
   void _navigateToAddStaff() async {
@@ -167,10 +121,21 @@ class _StaffSubViewState extends State<StaffSubView> {
         : 'EM';
   }
 
+  List<StaffMember> get _displayedStaff {
+    final staff = _filteredStaff;
+    if (_sortAlphabetically) {
+      staff.sort(
+        (left, right) =>
+            left.name.toLowerCase().compareTo(right.name.toLowerCase()),
+      );
+    }
+    return staff;
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasNoRoles = _roles.isEmpty;
-    final filteredStaff = _filteredStaff;
+    final filteredStaff = _displayedStaff;
     if (!hasNoRoles && _staffList.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -210,27 +175,6 @@ class _StaffSubViewState extends State<StaffSubView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (_selectedFilter != 'All')
-                Chip(
-                  label: Text(
-                    _selectedFilter,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  deleteIcon: const Icon(
-                    Icons.close_rounded,
-                    size: 14,
-                    color: Colors.white,
-                  ),
-                  onDeleted: () => setState(() => _selectedFilter = 'All'),
-                  backgroundColor: AppColors.primary,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                )
-              else
-                const SizedBox.shrink(),
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: _navigateToAddStaff,

@@ -4,6 +4,7 @@ import '../../../controllers/employee_controller.dart';
 import '../../../models/employee_models.dart';
 import '../../../shared/media_picker.dart';
 import '../../../shared/search_filter_bar.dart';
+import '../../../shared/role_filter_dialog.dart';
 import 'edit_role_screen.dart';
 import 'role_details_screen.dart';
 
@@ -19,6 +20,7 @@ class _RoleSubViewState extends State<RoleSubView> {
   final _controller = EmployeeController();
   List<RoleItem> _roles = [];
   List<StaffMember> _staff = [];
+  RoleSortOption _sortOption = RoleSortOption.nameAscending;
 
   @override
   void dispose() {
@@ -39,7 +41,32 @@ class _RoleSubViewState extends State<RoleSubView> {
 
   List<RoleItem> get _filteredRoles {
     final query = _searchController.text.trim().toLowerCase();
-    return _roles.where((r) => r.name.toLowerCase().contains(query)).toList();
+    final roles =
+        _roles.where((r) => r.name.toLowerCase().contains(query)).toList();
+    roles.sort((left, right) {
+      final leftCount = _staff.where((staff) => staff.role == left.name).length;
+      final rightCount =
+          _staff.where((staff) => staff.role == right.name).length;
+      switch (_sortOption) {
+        case RoleSortOption.nameAscending:
+          return left.name.toLowerCase().compareTo(right.name.toLowerCase());
+        case RoleSortOption.quantityAscending:
+          return leftCount.compareTo(rightCount);
+        case RoleSortOption.quantityDescending:
+          return rightCount.compareTo(leftCount);
+      }
+    });
+    return roles;
+  }
+
+  Future<void> _openFilter() async {
+    final option = await showRoleFilterDialog(
+      context,
+      selected: _sortOption,
+    );
+    if (option != null && mounted) {
+      setState(() => _sortOption = option);
+    }
   }
 
   void _navigateToAddRole() async {
@@ -72,7 +99,7 @@ class _RoleSubViewState extends State<RoleSubView> {
         CapsuleSearchFilterBar(
           controller: _searchController,
           onChanged: (_) => setState(() {}),
-          onFilterTap: () {},
+          onFilterTap: _openFilter,
           hintText: 'Search',
         ),
         const SizedBox(height: 14),

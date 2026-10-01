@@ -11,6 +11,7 @@ import '../../models/shift_model.dart';
 import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
+import '../../shared/sort_dialog.dart';
 import 'add_to_cart_screen.dart';
 import 'order_details_screen.dart';
 import '../shift/manage/open_shift_screen.dart';
@@ -28,6 +29,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   final TransactionController _transactionController = TransactionController();
   final _searchController = TextEditingController();
   bool _isGridView = false;
+  ListSortOption _sortOption = ListSortOption.dateNewest;
   final List<LaundryOrder> _orders = [];
   StreamSubscription<List<LaundryOrder>>? _ordersSubscription;
   StreamSubscription<ShiftModel?>? _shiftSubscription;
@@ -168,6 +170,37 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return Icons.local_laundry_service_outlined;
   }
 
+  Future<void> _openSortDialog() async {
+    final option = await showListSortDialog(
+      context,
+      selected: _sortOption,
+      title: 'Filter orders',
+    );
+    if (option != null && mounted) setState(() => _sortOption = option);
+  }
+
+  void _sortOrders(List<LaundryOrder> orders) {
+    orders.sort((left, right) {
+      switch (_sortOption) {
+        case ListSortOption.nameAscending:
+          return left.customerName.toLowerCase().compareTo(
+            right.customerName.toLowerCase(),
+          );
+        case ListSortOption.priceDescending:
+          return right.total.compareTo(left.total);
+        case ListSortOption.priceAscending:
+          return left.total.compareTo(right.total);
+        case ListSortOption.dateNewest:
+          return _dateValue(right.dateTime).compareTo(_dateValue(left.dateTime));
+        case ListSortOption.dateOldest:
+          return _dateValue(left.dateTime).compareTo(_dateValue(right.dateTime));
+      }
+    });
+  }
+
+  DateTime _dateValue(String value) =>
+      DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+
   @override
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
@@ -181,6 +214,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       o.id.toLowerCase().contains(query)),
             )
             .toList();
+    _sortOrders(filtered);
 
     return Scaffold(
       backgroundColor: AppColors.neutral[400],
@@ -210,7 +244,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 CapsuleSearchFilterBar(
                   controller: _searchController,
                   onChanged: (_) => setState(() {}),
-                  onFilterTap: () {},
+                  onFilterTap: _openSortDialog,
                   isGridView: _isGridView,
                   onToggleView:
                       () => setState(() => _isGridView = !_isGridView),

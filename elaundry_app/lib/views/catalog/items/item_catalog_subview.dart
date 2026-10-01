@@ -149,7 +149,7 @@ class _ItemListCard extends StatelessWidget {
                     Row(
                       children: [
                         _ItemTag(
-                          label: item.serviceType,
+                          label: item.category.toUpperCase(),
                           color: const Color(0xFF86A8A4),
                         ),
                         if (_hasMachineTag(item.machineType)) ...[

@@ -4,6 +4,7 @@ import '../../../core/themes/theme.dart';
 import '../../../models/shift_model.dart';
 import '../../../shared/empty_states.dart';
 import '../../../shared/search_filter_bar.dart';
+import '../../../shared/sort_dialog.dart';
 
 class ReportShiftSubview extends StatefulWidget {
   final List<ShiftModel> todayReports;
@@ -23,6 +24,7 @@ class ReportShiftSubview extends StatefulWidget {
 
 class _ReportShiftSubviewState extends State<ReportShiftSubview> {
   final _searchController = TextEditingController();
+  ListSortOption _sortOption = ListSortOption.dateNewest;
 
   @override
   void dispose() {
@@ -32,14 +34,33 @@ class _ReportShiftSubviewState extends State<ReportShiftSubview> {
 
   List<ShiftModel> _filter(List<ShiftModel> list) {
     final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return list;
-    return list
+    final filtered =
+        q.isEmpty
+            ? list.toList()
+            : list
         .where(
           (s) =>
               s.id.toLowerCase().contains(q) ||
               s.time.toLowerCase().contains(q),
         )
         .toList();
+    filtered.sort((left, right) {
+      final leftDate = left.openedAt ?? DateTime.tryParse(left.dateTime);
+      final rightDate = right.openedAt ?? DateTime.tryParse(right.dateTime);
+      final leftValue = leftDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final rightValue = rightDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return _sortOption == ListSortOption.dateOldest
+          ? leftValue.compareTo(rightValue)
+          : rightValue.compareTo(leftValue);
+    });
+    return filtered;
+  }
+
+  Future<void> _openFilter() async {
+    final option = await showShiftSortDialog(context, selected: _sortOption);
+    if (option != null && mounted) {
+      setState(() => _sortOption = option);
+    }
   }
 
   @override
@@ -54,7 +75,7 @@ class _ReportShiftSubviewState extends State<ReportShiftSubview> {
         CapsuleSearchFilterBar(
           controller: _searchController,
           onChanged: (_) => setState(() {}),
-          onFilterTap: () {},
+          onFilterTap: _openFilter,
           hintText: 'Search',
         ),
         const SizedBox(height: 16),

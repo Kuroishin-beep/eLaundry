@@ -6,6 +6,7 @@ import '../../core/themes/theme.dart';
 import '../../models/catalog_models.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
+import '../../shared/item_filter_dialog.dart';
 import './categories/category_catalog_subview.dart';
 import './categories/category_details_screen.dart';
 import './categories/edit_category_screen.dart';
@@ -27,6 +28,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
   final _searchController = TextEditingController();
   int _selectedTabIndex = 0; // 0: Item, 1: Category
   bool _isGridView = false;
+  Set<String> _selectedItemCategories = {};
+  bool _sortItemsAlphabetically = false;
   late Stream<List<CatalogItem>> _itemsStream;
   late Stream<List<CatalogCategory>> _categoriesStream;
   late final Future<NavigationPermissions> _permissionsFuture;
@@ -125,6 +128,22 @@ class _CatalogScreenState extends State<CatalogScreen> {
         .map((category) => category.name)
         .toSet()
         .toList();
+  }
+
+  Future<void> _openItemFilter() async {
+    final categories = await _getItemCategoryOptions();
+    if (!mounted) return;
+    final selection = await showItemFilterDialog(
+      context,
+      categories: categories,
+      selectedCategories: _selectedItemCategories,
+      alphabetical: _sortItemsAlphabetically,
+    );
+    if (selection == null || !mounted) return;
+    setState(() {
+      _selectedItemCategories = selection.categories;
+      _sortItemsAlphabetically = selection.alphabetical;
+    });
   }
 
   Future<List<String>> _getItemMachineOptions() async {
@@ -318,7 +337,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
               CapsuleSearchFilterBar(
                 controller: _searchController,
                 onChanged: (_) => setState(() {}),
-                onFilterTap: () {},
+                onFilterTap:
+                    selectedTabIndex == 0 ? _openItemFilter : () {},
                 isGridView: _isGridView,
                 onToggleView: () => setState(() => _isGridView = !_isGridView),
                 hintText: 'Search',
@@ -335,8 +355,31 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
                     }
+                    final query = _searchController.text.trim().toLowerCase();
+                    final items =
+                        snapshot.data!
+                            .where(
+                              (item) =>
+                                  (query.isEmpty ||
+                                      item.name.toLowerCase().contains(query) ||
+                                      item.category.toLowerCase().contains(
+                                        query,
+                                      )) &&
+                                  (_selectedItemCategories.isEmpty ||
+                                      _selectedItemCategories.contains(
+                                        item.category,
+                                      )),
+                            )
+                            .toList();
+                    if (_sortItemsAlphabetically) {
+                      items.sort(
+                        (left, right) => left.name.toLowerCase().compareTo(
+                          right.name.toLowerCase(),
+                        ),
+                      );
+                    }
                     return ItemCatalogSubview(
-                      items: snapshot.data!,
+                      items: items,
                       isGridView: _isGridView,
                       onAddItem: _openAddItem,
                       onItemTap: _openItemDetails,
