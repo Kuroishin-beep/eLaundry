@@ -308,6 +308,7 @@ class CatalogController {
     'serviceType': item.serviceType,
     'note': item.note,
     'imageUrl': item.imageUrl,
+    'iconName': item.iconName,
   };
 
   CatalogItem _itemFromDocument(
@@ -337,6 +338,7 @@ class CatalogController {
       serviceType: data['serviceType'] as String? ?? 'SERVICE',
       note: data['note'] as String? ?? '',
       imageUrl: data['imageUrl'] as String?,
+      iconName: data['iconName'] as String? ?? 'Local Laundry Service',
     );
   }
 
@@ -355,6 +357,7 @@ class CatalogController {
     'isBuiltIn': category.isBuiltIn,
     'note': category.note,
     'imageUrl': category.imageUrl,
+    'iconName': category.iconName,
   };
 
   CatalogCategory _categoryFromDocument(
@@ -373,6 +376,7 @@ class CatalogController {
       isBuiltIn: data['isBuiltIn'] as bool? ?? false,
       note: data['note'] as String? ?? '',
       imageUrl: data['imageUrl'] as String?,
+      iconName: data['iconName'] as String? ?? 'Inventory',
     );
   }
 

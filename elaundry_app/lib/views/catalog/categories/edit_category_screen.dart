@@ -21,6 +21,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _notesController;
   String? _imageUrl;
+  late String _iconName;
 
   bool get _isEditing => widget.categoryToEdit != null;
 
@@ -31,6 +32,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
       text: widget.categoryToEdit?.name ?? '',
     );
     _imageUrl = widget.categoryToEdit?.imageUrl;
+    _iconName = widget.categoryToEdit?.iconName ?? 'Inventory';
     _notesController = TextEditingController(
       text: widget.categoryToEdit?.note ?? '',
     );
@@ -54,6 +56,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
         quantity: widget.categoryToEdit?.quantity ?? 0,
         note: _notesController.text.trim(),
         imageUrl: _imageUrl,
+        iconName: _iconName,
       );
 
       Navigator.of(context).pop(savedCat);
@@ -119,12 +122,6 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ImageUploadField(
-                      folder: 'entities',
-                      initialUrl: _imageUrl,
-                      onChanged: (value) => _imageUrl = value,
-                    ),
-                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     CatalogSectionCard(
                       stepNumber: '1',
@@ -152,86 +149,16 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                       stepNumber: '2',
                       title: 'APPEARANCE',
                       children: [
-                        Container(
-                          height: 48,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.neutral[500]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.sentiment_satisfied_alt_rounded,
-                                size: 20,
-                                color: AppColors.secondary[600],
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Pick an icon',
-                                style: TextStyle(
-                                  color: AppColors.secondary[400],
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 20,
-                                color: AppColors.secondary[400],
-                              ),
-                            ],
-                          ),
+                        IconPickerField(
+                          value: _iconName,
+                          onChanged:
+                              (value) => setState(() => _iconName = value),
                         ),
                         const SizedBox(height: 14),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.neutral[500]!),
-                          ),
-                          child: Column(
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: BorderSide(
-                                    color: AppColors.neutral[600]!,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.file_upload_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'Upload image',
-                                  style: TextStyle(color: Color(0xFF2B2D2C)),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Choose an image',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.secondary[600],
-                                ),
-                              ),
-                              Text(
-                                'JPG, JPEG, PNG, WEBP.',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.secondary[400],
-                                ),
-                              ),
-                            ],
-                          ),
+                        ImageUploadField(
+                          folder: 'entities',
+                          initialUrl: _imageUrl,
+                          onChanged: (value) => _imageUrl = value,
                         ),
                       ],
                     ),

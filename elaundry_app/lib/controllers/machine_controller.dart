@@ -114,6 +114,7 @@ class MachineController {
     'isAvailable': machine.isAvailable,
     'note': machine.note,
     'imageUrl': machine.imageUrl,
+    'iconName': machine.iconName,
   };
 
   MachineItem _fromDocument(
@@ -133,6 +134,7 @@ class MachineController {
       isAvailable: data['isAvailable'] as bool? ?? true,
       note: data['note'] as String? ?? '',
       imageUrl: data['imageUrl'] as String?,
+      iconName: data['iconName'] as String? ?? 'Local Laundry Service',
     );
   }
 }

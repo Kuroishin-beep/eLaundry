@@ -9,6 +9,7 @@ class MachineItem {
   final bool isAvailable;
   final String note;
   final String? imageUrl;
+  final String iconName;
 
   const MachineItem({
     required this.id,
@@ -19,5 +20,6 @@ class MachineItem {
     this.isAvailable = true,
     this.note = '',
     this.imageUrl,
+    this.iconName = 'Local Laundry Service',
   });
 }

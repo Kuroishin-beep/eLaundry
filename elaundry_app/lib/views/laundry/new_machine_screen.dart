@@ -21,6 +21,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
   final _quantityController = TextEditingController(text: '1');
   final _notesController = TextEditingController();
   String? _imageUrl;
+  String _iconName = 'Local Laundry Service';
 
   String _selectedCategory = 'Washers';
   final List<String> _categories = ['Washers', 'Dryers'];
@@ -49,6 +50,7 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                 : MachineType.washer,
         note: _notesController.text.trim(),
         imageUrl: _imageUrl,
+        iconName: _iconName,
       );
 
       Navigator.of(context).pop(newMachine);
@@ -93,12 +95,6 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ImageUploadField(
-                      folder: 'entities',
-                      initialUrl: _imageUrl,
-                      onChanged: (value) => _imageUrl = value,
-                    ),
-                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     SectionCard(
                       stepNumber: '1',
@@ -238,96 +234,16 @@ class _NewMachineScreenState extends State<NewMachineScreen> {
                       titleLetterSpacing: 0,
                       contentSpacing: 14,
                       children: [
-                        InkWell(
-                          onTap: () {},
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: AppColors.neutral[600]!,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.sentiment_satisfied_alt_rounded,
-                                  size: 20,
-                                  color: AppColors.secondary[600],
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Pick an icon',
-                                    style: TextStyle(
-                                      color: AppColors.secondary[300],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 20,
-                                  color: AppColors.secondary[400],
-                                ),
-                              ],
-                            ),
-                          ),
+                        IconPickerField(
+                          value: _iconName,
+                          onChanged:
+                              (value) => setState(() => _iconName = value),
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.neutral[500]!),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: BorderSide(
-                                    color: AppColors.neutral[600]!,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.file_upload_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'Upload image',
-                                  style: TextStyle(color: Color(0xFF2B2D2C)),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Choose an image',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.secondary[600],
-                                ),
-                              ),
-                              Text(
-                                'JPG, JPEG, PNG, WEBP.',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.secondary[400],
-                                ),
-                              ),
-                            ],
-                          ),
+                        ImageUploadField(
+                          folder: 'entities',
+                          initialUrl: _imageUrl,
+                          onChanged: (value) => _imageUrl = value,
                         ),
                       ],
                     ),

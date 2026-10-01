@@ -25,12 +25,14 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
   late MachineType _selectedType;
   late bool _isAvailable;
   String? _imageUrl;
+  late String _iconName;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.machine.name);
     _imageUrl = widget.machine.imageUrl;
+    _iconName = widget.machine.iconName;
     _tierController = TextEditingController(text: widget.machine.tier);
     _quantityController = TextEditingController(
       text: widget.machine.count.toString(),
@@ -63,6 +65,7 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
         isAvailable: _isAvailable,
         note: _notesController.text.trim(),
         imageUrl: _imageUrl,
+        iconName: _iconName,
       ),
     );
   }
@@ -127,12 +130,6 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ImageUploadField(
-                      folder: 'entities',
-                      initialUrl: _imageUrl,
-                      onChanged: (value) => _imageUrl = value,
-                    ),
-                    const SizedBox(height: 12),
                     SectionCard(
                       stepNumber: '1',
                       title: 'BASIC INFORMATION',
@@ -225,6 +222,32 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
                     const SizedBox(height: 16),
                     SectionCard(
                       stepNumber: '2',
+                      title: 'APPEARANCE',
+                      padding: const EdgeInsets.all(16),
+                      borderRadius: 14,
+                      shadowOpacity: 0.02,
+                      shadowOffset: const Offset(0, 3),
+                      titleFontSize: 11.5,
+                      titleColor: const Color(0xFF454746),
+                      titleLetterSpacing: 0,
+                      contentSpacing: 14,
+                      children: [
+                        IconPickerField(
+                          value: _iconName,
+                          onChanged:
+                              (value) => setState(() => _iconName = value),
+                        ),
+                        const SizedBox(height: 14),
+                        ImageUploadField(
+                          folder: 'entities',
+                          initialUrl: _imageUrl,
+                          onChanged: (value) => _imageUrl = value,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SectionCard(
+                      stepNumber: '3',
                       title: 'QUANTITY & STATUS',
                       padding: const EdgeInsets.all(16),
                       borderRadius: 14,
@@ -269,7 +292,7 @@ class _EditMachineScreenState extends State<EditMachineScreen> {
                     ),
                     const SizedBox(height: 16),
                     SectionCard(
-                      stepNumber: '3',
+                      stepNumber: '4',
                       title: 'OPTIONAL',
                       padding: const EdgeInsets.all(16),
                       borderRadius: 14,

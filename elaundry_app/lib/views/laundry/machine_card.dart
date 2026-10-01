@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/machine_model.dart';
+import '../../../shared/media_picker.dart';
 
 class MachineCard extends StatelessWidget {
   final MachineItem item;
@@ -35,36 +36,7 @@ class MachineCard extends StatelessWidget {
                     color: AppColors.neutral[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child:
-                      item.imageUrl == null
-                          ? Center(
-                            child: Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: AppColors.primary[300]!,
-                                  width: 4,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.local_laundry_service_rounded,
-                                  size: 32,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          )
-                          : ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              item.imageUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                  child: _MachineMediaPreview(item: item),
                 ),
               ),
               const SizedBox(height: 12),
@@ -95,6 +67,53 @@ class MachineCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MachineMediaPreview extends StatelessWidget {
+  final MachineItem item;
+
+  const _MachineMediaPreview({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = item.imageUrl?.trim();
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return _fallbackIcon();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackIcon(),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Center(
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: AppColors.primary[300]!, width: 4),
+        ),
+        child: Center(
+          child: Icon(
+            iconForName(item.iconName),
+            size: 32,
+            color: AppColors.primary,
           ),
         ),
       ),

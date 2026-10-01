@@ -1,27 +1,33 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_iconpicker/flutter_iconpicker.dart';
+import 'package:flutter_iconpicker/Models/configuration.dart';
 import '../services/media_service.dart';
 
-const roleIconNames = <String>[
-  'Point of Sale',
-  'People',
-  'Admin Panel Settings',
-  'Local Laundry Service',
-  'Inventory',
-  'Assessment',
-  'Security',
-  'Support Agent',
-];
+IconData iconForName(String name) {
+  try {
+    final decoded = jsonDecode(name);
+    if (decoded is Map<String, dynamic>) {
+      return deserializeIcon(decoded)?.data ?? Icons.extension_rounded;
+    }
+  } catch (_) {
+    // Older records contain only the icon name.
+  }
+  return Icons.extension_rounded;
+}
 
-IconData iconForName(String name) => switch (name) {
-  'People' => Icons.people_alt_rounded,
-  'Admin Panel Settings' => Icons.admin_panel_settings_rounded,
-  'Local Laundry Service' => Icons.local_laundry_service_rounded,
-  'Inventory' => Icons.inventory_2_rounded,
-  'Assessment' => Icons.assessment_rounded,
-  'Security' => Icons.security_rounded,
-  'Support Agent' => Icons.support_agent_rounded,
-  _ => Icons.point_of_sale_rounded,
-};
+String iconLabel(String value) {
+  try {
+    final decoded = jsonDecode(value);
+    if (decoded is Map<String, dynamic>) {
+      return decoded['key'] as String? ?? value;
+    }
+  } catch (_) {
+    // Older records contain plain icon names.
+  }
+  return value;
+}
 
 class ImageUploadField extends StatefulWidget {
   const ImageUploadField({
@@ -58,43 +64,55 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
   }
 
   @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: _busy ? null : _pick,
-    borderRadius: BorderRadius.circular(10),
-    child: Container(
-      height: 72,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFC7CFCE)),
-      ),
-      child: Row(
-        children: [
-          if (_url != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(7),
-              child: Image.network(
-                _url!,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-              ),
-            )
-          else
-            const Icon(Icons.add_photo_alternate_outlined, size: 30),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(_busy ? 'Uploading…' : 'Tap to upload ${widget.label}'),
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: const Color(0xFFC7CFCE)),
+    ),
+    child: Column(
+      children: [
+        if (_url != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              _url!,
+              width: 110,
+              height: 78,
+              fit: BoxFit.cover,
+            ),
           ),
-          const Icon(Icons.chevron_right_rounded),
+          const SizedBox(height: 12),
         ],
-      ),
+        OutlinedButton.icon(
+          onPressed: _busy ? null : _pick,
+          icon: const Icon(Icons.file_upload_outlined, size: 18),
+          label: Text(_busy ? 'Uploading...' : 'Upload image'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF2B2D2C),
+            side: const BorderSide(color: Color(0xFFC7CFCE)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _url == null ? 'Choose an image' : 'Replace image',
+          style: const TextStyle(fontSize: 11, color: Color(0xFF637371)),
+        ),
+        const Text(
+          'JPG, JPEG, PNG, WEBP.',
+          style: TextStyle(fontSize: 10, color: Color(0xFF9EA7A6)),
+        ),
+      ],
     ),
   );
 }
 
-class IconPickerField extends StatelessWidget {
+class IconPickerField extends StatefulWidget {
   const IconPickerField({
     super.key,
     required this.value,
@@ -104,39 +122,70 @@ class IconPickerField extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
+  State<IconPickerField> createState() => _IconPickerFieldState();
+}
+
+class _IconPickerFieldState extends State<IconPickerField> {
+  Future<void> _openPicker() async {
+    final selected = await showIconPicker(
+      context,
+      configuration: SinglePickerConfiguration(
+        adaptiveDialog: true,
+        showSearchBar: true,
+        title: const Text('Choose an icon'),
+        searchHintText: 'Search icons',
+        iconPackModes: const [IconPack.allMaterial, IconPack.fontAwesomeIcons],
+        iconPickerShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        constraints: BoxConstraints(
+          maxWidth: double.infinity,
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+      ),
+    );
+
+    if (selected != null && mounted) {
+      widget.onChanged(jsonEncode(serializeIcon(selected)));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) => InkWell(
-    onTap: () async {
-      final selected = await showDialog<String>(
-        context: context,
-        builder:
-            (context) => SimpleDialog(
-              title: const Text('Choose an icon'),
-              children: [
-                for (final name in roleIconNames)
-                  SimpleDialogOption(
-                    onPressed: () => Navigator.pop(context, name),
-                    child: Row(
-                      children: [
-                        Icon(iconForName(name)),
-                        const SizedBox(width: 12),
-                        Text(name),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-      );
-      if (selected != null) onChanged(selected);
-    },
-    child: InputDecorator(
-      decoration: const InputDecoration(border: OutlineInputBorder()),
+    onTap: _openPicker,
+    borderRadius: BorderRadius.circular(10),
+    child: Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFC7CFCE)),
+      ),
       child: Row(
         children: [
-          Icon(iconForName(value)),
+          Icon(
+            iconForName(widget.value),
+            size: 20,
+            color: const Color(0xFF637371),
+          ),
           const SizedBox(width: 12),
-          Text(value),
+          Text(
+            widget.value.isEmpty ? 'Pick an icon' : iconLabel(widget.value),
+            style: TextStyle(
+              color:
+                  widget.value.isEmpty
+                      ? const Color(0xFF9EA7A6)
+                      : const Color(0xFF444645),
+              fontSize: 13.5,
+            ),
+          ),
           const Spacer(),
-          const Icon(Icons.chevron_right_rounded),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: Color(0xFF637371),
+          ),
         ],
       ),
     ),

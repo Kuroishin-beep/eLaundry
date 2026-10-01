@@ -283,12 +283,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                       const FieldLabel(label: 'ITEM NAME', letterSpacing: 0),
                       _ReadOnlyFieldBox(
                         iconWidget: Container(
-                          width: 40,
+                          width: 20,
                           alignment: Alignment.center,
                           child: const Text(
                             'Aa',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF6B7270),
                             ),

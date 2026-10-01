@@ -12,6 +12,7 @@ class CatalogItem {
   final String serviceType;
   final String note;
   final String? imageUrl;
+  final String iconName;
 
   const CatalogItem({
     required this.id,
@@ -27,6 +28,7 @@ class CatalogItem {
     this.serviceType = 'SERVICE',
     this.note = '',
     this.imageUrl,
+    this.iconName = 'Local Laundry Service',
   });
 
   String get priceLabel => 'P${price.toStringAsFixed(2)}';
@@ -43,7 +45,7 @@ class CatalogItem {
         '${seconds.toString().padLeft(2, '0')}';
   }
 
-  CatalogItem copyWith({String? imageUrl}) => CatalogItem(
+  CatalogItem copyWith({String? imageUrl, String? iconName}) => CatalogItem(
     id: id,
     name: name,
     category: category,
@@ -57,6 +59,7 @@ class CatalogItem {
     serviceType: serviceType,
     note: note,
     imageUrl: imageUrl ?? this.imageUrl,
+    iconName: iconName ?? this.iconName,
   );
 }
 
@@ -71,6 +74,7 @@ class CatalogCategory {
   final bool isBuiltIn;
   final String note;
   final String? imageUrl;
+  final String iconName;
 
   const CatalogCategory({
     required this.id,
@@ -83,12 +87,13 @@ class CatalogCategory {
     this.isBuiltIn = false,
     this.note = '',
     this.imageUrl,
+    this.iconName = 'Inventory',
   });
 
   String get minSpendLabel =>
       minSpend == null ? '' : 'Min. Spend P${minSpend!.toStringAsFixed(2)}';
 
-  CatalogCategory copyWith({int? quantity, String? imageUrl}) =>
+  CatalogCategory copyWith({int? quantity, String? imageUrl, String? iconName}) =>
       CatalogCategory(
         id: id,
         name: name,
@@ -100,6 +105,7 @@ class CatalogCategory {
         isBuiltIn: isBuiltIn,
         note: note,
         imageUrl: imageUrl ?? this.imageUrl,
+        iconName: iconName ?? this.iconName,
       );
 }
 

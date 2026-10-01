@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
 import '../../../models/catalog_models.dart';
 import '../../../shared/empty_states.dart';
+import '../../../shared/media_picker.dart';
 
 class ItemCatalogSubview extends StatelessWidget {
   final List<CatalogItem> items;
@@ -124,22 +125,7 @@ class _ItemListCard extends StatelessWidget {
                   color: AppColors.neutral[300],
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child:
-                    item.imageUrl == null
-                        ? const Center(
-                          child: Icon(
-                            Icons.local_laundry_service_rounded,
-                            size: 36,
-                            color: Color(0xFF637371),
-                          ),
-                        )
-                        : ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.network(
-                            item.imageUrl!,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                child: _ItemMediaPreview(item: item),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -237,19 +223,7 @@ class _ItemGridCard extends StatelessWidget {
                 color: AppColors.neutral[300],
                 borderRadius: BorderRadius.circular(6),
               ),
-              child:
-                  item.imageUrl == null
-                      ? const Center(
-                        child: Icon(
-                          Icons.local_laundry_service_rounded,
-                          size: 36,
-                          color: Color(0xFF637371),
-                        ),
-                      )
-                      : ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(item.imageUrl!, fit: BoxFit.cover),
-                      ),
+              child: _ItemMediaPreview(item: item),
             ),
           ),
           const SizedBox(height: 8),
@@ -275,6 +249,42 @@ class _ItemGridCard extends StatelessWidget {
             child: _ViewItemButton(onTap: onTap, compact: true),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ItemMediaPreview extends StatelessWidget {
+  final CatalogItem item;
+
+  const _ItemMediaPreview({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = item.imageUrl?.trim();
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return _fallbackIcon();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackIcon(),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Center(
+      child: Icon(
+        iconForName(item.iconName),
+        size: 36,
+        color: const Color(0xFF637371),
       ),
     );
   }

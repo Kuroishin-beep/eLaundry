@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
 import '../../../models/catalog_models.dart';
+import '../../../shared/media_picker.dart';
 
 class CategoryCatalogSubview extends StatelessWidget {
   final List<CatalogCategory> categories;
@@ -128,11 +129,7 @@ class _CategoryListCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             alignment: Alignment.center,
-            child: const Icon(
-              Icons.local_laundry_service_outlined,
-              color: Colors.white,
-              size: 26,
-            ),
+            child: _CategoryMediaPreview(category: category, iconSize: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -147,7 +144,6 @@ class _CategoryListCard extends StatelessWidget {
                     color: Color(0xFF2C2D2D),
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   category.isDiscount
                       ? '${category.discountAmount.toStringAsFixed(2)} ${category.discountType} off, ${category.minSpendLabel}'
@@ -216,13 +212,7 @@ class _CategoryGridCard extends StatelessWidget {
                         : const Color(0xFF5E8B88),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.local_laundry_service_outlined,
-                  color: Colors.white,
-                  size: 36,
-                ),
-              ),
+              child: _CategoryMediaPreview(category: category, iconSize: 36),
             ),
           ),
           const SizedBox(height: 8),
@@ -266,6 +256,42 @@ class _CategoryGridCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CategoryMediaPreview extends StatelessWidget {
+  final CatalogCategory category;
+  final double iconSize;
+
+  const _CategoryMediaPreview({required this.category, required this.iconSize});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = category.imageUrl?.trim();
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Icon(
+        iconForName(category.iconName),
+        color: Colors.white,
+        size: iconSize,
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (_, __, ___) => Icon(
+              iconForName(category.iconName),
+              color: Colors.white,
+              size: iconSize,
+            ),
       ),
     );
   }
