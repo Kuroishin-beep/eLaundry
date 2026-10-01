@@ -33,7 +33,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Email this report?',
+                    'Save this report?',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -42,7 +42,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'A copy of this report will be sent to\njuan********@gmail.com.',
+                    'Save this shift report for the store?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -60,7 +60,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                           height: 44,
                           child: ElevatedButton(
                             onPressed:
-                                () => Navigator.of(dialogCtx).pop('save'),
+                                () => Navigator.of(dialogCtx).pop('cancel'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFC7C9C8),
                               elevation: 0,
@@ -70,7 +70,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             child: const Text(
-                              'Save Only',
+                              'Cancel',
                               style: TextStyle(
                                 color: Color(0xFF333333),
                                 fontWeight: FontWeight.w600,
@@ -86,7 +86,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                           height: 44,
                           child: ElevatedButton(
                             onPressed:
-                                () => Navigator.of(dialogCtx).pop('send_save'),
+                                () => Navigator.of(dialogCtx).pop('save'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.accent,
                               elevation: 0,
@@ -96,7 +96,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             child: const Text(
-                              'Send & Save',
+                              'Save',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -116,18 +116,22 @@ class ShiftDetailsScreen extends StatelessWidget {
           ),
     );
 
-    if (result == null || !context.mounted) return;
+    if (result != 'save' || !context.mounted) return;
 
     try {
       final closedShift = await controller.closeShift(currentShift);
       if (context.mounted) Navigator.of(context).pop(closedShift);
     } catch (error) {
       if (!context.mounted) return;
+      final message = error.toString().replaceFirst(
+        RegExp(r'^(Bad state|Exception):\s*'),
+        '',
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Unable to close shift: $error'),
+          content: Text('Unable to close shift: $message'),
         ),
       );
     }

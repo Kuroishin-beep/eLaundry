@@ -88,7 +88,7 @@ class NavigationPermissions {
         shifts: permissions.shiftManagement || permissions.shiftReport,
         employees: false,
         reports: permissions.accessReport,
-        settings: false,
+        settings: true,
       );
     } on StateError {
       return none;

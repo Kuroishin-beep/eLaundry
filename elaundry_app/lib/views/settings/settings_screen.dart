@@ -42,6 +42,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final user = await _settingsController.getUserProfile();
       final storeContext = await _settingsController.getStoreContext();
       final store = await _settingsController.getStoreSettings();
+      final employeePin =
+          storeContext.isOwner
+              ? null
+              : await _settingsController.getEmployeePin();
 
       if (mounted) {
         setState(() {
@@ -51,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _storeName = store.storeName;
           _address = store.address;
-          _pin = store.pin;
+          _pin = employeePin ?? (storeContext.isOwner ? store.pin : '');
           _notificationsEnabled = store.notificationsEnabled;
           _isStoreOwner = storeContext.isOwner;
           _isLoading = false;
@@ -152,6 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required SettingFieldType fieldType,
     int? maxLength,
     String? helperText,
+    String? expectedVerificationValue,
+    String verificationLabel = 'Current value',
     required Future<void> Function(String) onSave,
   }) async {
     final result = await Navigator.of(context).push<String>(
@@ -164,6 +170,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fieldType: fieldType,
               maxLength: maxLength,
               helperText: helperText,
+              expectedVerificationValue: expectedVerificationValue,
+              verificationLabel: verificationLabel,
             ),
       ),
     );
@@ -245,7 +253,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 ],
                               ),
-                              onTap: _showImagePickerOptions,
+                              onTap:
+                                  _isStoreOwner
+                                      ? _showImagePickerOptions
+                                      : null,
                             ),
                             const _CardDivider(),
                             _SettingsTile(
@@ -261,18 +272,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               onTap:
-                                  () => _openEditor(
-                                    title: 'Email Address',
-                                    label: 'Email',
-                                    currentValue: _email,
-                                    fieldType: SettingFieldType.email,
-                                    onSave: (val) async {
-                                      await _settingsController.updateEmail(
-                                        val,
-                                      );
-                                      setState(() => _email = val);
-                                    },
-                                  ),
+                                  _isStoreOwner
+                                      ? () => _openEditor(
+                                        title: 'Email Address',
+                                        label: 'Email',
+                                        currentValue: _email,
+                                        fieldType: SettingFieldType.email,
+                                        onSave: (val) async {
+                                          await _settingsController.updateEmail(
+                                            val,
+                                          );
+                                          setState(() => _email = val);
+                                        },
+                                      )
+                                      : null,
                             ),
                             const _CardDivider(),
                             _SettingsTile(
@@ -286,37 +299,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               onTap:
-                                  () => _openEditor(
-                                    title: 'Account Name',
-                                    label: 'Full Name',
-                                    currentValue: _accountName,
-                                    fieldType: SettingFieldType.text,
-                                    onSave: (val) async {
-                                      await _settingsController
-                                          .updateAccountName(val);
-                                      setState(() => _accountName = val);
-                                    },
-                                  ),
+                                  _isStoreOwner
+                                      ? () => _openEditor(
+                                        title: 'Account Name',
+                                        label: 'Full Name',
+                                        currentValue: _accountName,
+                                        fieldType: SettingFieldType.text,
+                                        onSave: (val) async {
+                                          await _settingsController
+                                              .updateAccountName(val);
+                                          setState(() => _accountName = val);
+                                        },
+                                      )
+                                      : null,
                             ),
                             const _CardDivider(),
-                            _SettingsTile(
-                              icon: Icons.lock,
-                              title: 'Password',
-                              onTap:
-                                  () => _openEditor(
-                                    title: 'Change Password',
-                                    label: 'New Password',
-                                    currentValue: '',
-                                    fieldType: SettingFieldType.password,
-                                    helperText:
-                                        'Must be at least 6 characters long',
-                                    onSave: (val) async {
-                                      await _settingsController.updatePassword(
-                                        val,
-                                      );
-                                    },
-                                  ),
-                            ),
+                            if (_isStoreOwner)
+                              _SettingsTile(
+                                icon: Icons.lock,
+                                title: 'Password',
+                                onTap:
+                                    () => _openEditor(
+                                      title: 'Change Password',
+                                      label: 'New Password',
+                                      currentValue: '',
+                                      fieldType: SettingFieldType.password,
+                                      helperText:
+                                          'Must be at least 6 characters long',
+                                      onSave: (val) async {
+                                        await _settingsController
+                                            .updatePassword(val);
+                                      },
+                                    ),
+                              ),
                             const _CardDivider(),
                             _SettingsTile(
                               icon: Icons.notifications_rounded,
@@ -423,34 +438,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 8),
                         _SettingsCard(
                           children: [
-                            _SettingsTile(
-                              icon: Icons.dialpad_rounded,
-                              title: 'Pin',
-                              trailing: Text(
-                                _pin.isEmpty ? '' : '••••',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.secondary[600],
+                            if (!_isStoreOwner)
+                              _SettingsTile(
+                                icon: Icons.dialpad_rounded,
+                                title: 'Pin',
+                                trailing: Text(
+                                  _pin.isEmpty ? '' : '••••',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: AppColors.secondary[600],
+                                  ),
                                 ),
+                                onTap: null,
                               ),
-                              onTap:
-                                  _isStoreOwner
-                                      ? () => _openEditor(
-                                        title: 'Security PIN',
-                                        label: '4-Digit PIN',
-                                        currentValue: _pin,
-                                        fieldType: SettingFieldType.number,
-                                        maxLength: 4,
-                                        helperText:
-                                            'Only digits allowed (Numpad input)',
-                                        onSave: (val) async {
-                                          await _settingsController
-                                              .updateStoreSettings(pin: val);
-                                          setState(() => _pin = val);
-                                        },
-                                      )
-                                      : null,
-                            ),
                             const _CardDivider(),
                             _SettingsTile(
                               icon: Icons.logout_rounded,

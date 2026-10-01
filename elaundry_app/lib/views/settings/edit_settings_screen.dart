@@ -12,6 +12,8 @@ class EditSettingsScreen extends StatefulWidget {
   final SettingFieldType fieldType;
   final int? maxLength;
   final String? helperText;
+  final String? expectedVerificationValue;
+  final String verificationLabel;
 
   const EditSettingsScreen({
     super.key,
@@ -21,6 +23,8 @@ class EditSettingsScreen extends StatefulWidget {
     this.fieldType = SettingFieldType.text,
     this.maxLength,
     this.helperText,
+    this.expectedVerificationValue,
+    this.verificationLabel = 'Current value',
   });
 
   @override
@@ -30,18 +34,24 @@ class EditSettingsScreen extends StatefulWidget {
 class _EditSettingsScreenState extends State<EditSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _controller;
+  late final TextEditingController _verificationController;
   bool _obscureText = true;
+  bool _obscureVerificationText = true;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
-    _obscureText = widget.fieldType == SettingFieldType.password;
+    _verificationController = TextEditingController();
+    _obscureText =
+        widget.fieldType == SettingFieldType.password ||
+        widget.fieldType == SettingFieldType.number;
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _verificationController.dispose();
     super.dispose();
   }
 
@@ -140,54 +150,111 @@ class _EditSettingsScreenState extends State<EditSettingsScreen> {
                         ],
                       ),
                       padding: const EdgeInsets.all(20),
-                      child: TextFormField(
-                        controller: _controller,
-                        keyboardType: keyboardType,
-                        inputFormatters: formatters,
-                        obscureText: _obscureText,
-                        maxLines:
-                            widget.fieldType == SettingFieldType.multiline
-                                ? 3
-                                : 1,
-                        style: theme.textTheme.bodyMedium,
-                        decoration: appInputDecoration(
-                          hintText: 'Enter ${widget.label.toLowerCase()}',
-                        ).copyWith(
-                          helperText: widget.helperText,
-                          suffixIcon:
-                              widget.fieldType == SettingFieldType.password
-                                  ? IconButton(
-                                    splashRadius: 20,
-                                    icon: Icon(
-                                      _obscureText
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
-                                      size: 20,
-                                      color: AppColors.secondary[500],
-                                    ),
-                                    onPressed: () {
-                                      setState(
-                                        () => _obscureText = !_obscureText,
-                                      );
-                                    },
-                                  )
-                                  : null,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'This field cannot be empty';
-                          }
-                          if (widget.fieldType == SettingFieldType.email &&
-                              !value.contains('@')) {
-                            return 'Enter a valid email address';
-                          }
-                          if (widget.fieldType == SettingFieldType.number &&
-                              widget.maxLength != null &&
-                              value.length != widget.maxLength) {
-                            return 'Must be exactly ${widget.maxLength} digits';
-                          }
-                          return null;
-                        },
+                      child: Column(
+                        children: [
+                          if (widget.expectedVerificationValue != null) ...[
+                            TextFormField(
+                              controller: _verificationController,
+                              keyboardType: TextInputType.number,
+                              obscureText: _obscureVerificationText,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                if (widget.maxLength != null)
+                                  LengthLimitingTextInputFormatter(
+                                    widget.maxLength,
+                                  ),
+                              ],
+                              decoration: appInputDecoration(
+                                hintText: widget.verificationLabel,
+                              ).copyWith(
+                                suffixIcon: IconButton(
+                                  splashRadius: 20,
+                                  icon: Icon(
+                                    _obscureVerificationText
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    size: 20,
+                                    color: AppColors.secondary[500],
+                                  ),
+                                  onPressed: () {
+                                    setState(
+                                      () =>
+                                          _obscureVerificationText =
+                                              !_obscureVerificationText,
+                                    );
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                final enteredValue = value?.trim() ?? '';
+                                final expectedValue =
+                                    widget.expectedVerificationValue
+                                        ?.trim() ??
+                                    '';
+                                if (enteredValue.isEmpty) {
+                                  return 'Enter your current PIN';
+                                }
+                                if (enteredValue != expectedValue) {
+                                  return 'Current PIN is incorrect';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          TextFormField(
+                            controller: _controller,
+                            keyboardType: keyboardType,
+                            inputFormatters: formatters,
+                            obscureText: _obscureText,
+                            maxLines:
+                                widget.fieldType == SettingFieldType.multiline
+                                    ? 3
+                                    : 1,
+                            style: theme.textTheme.bodyMedium,
+                            decoration: appInputDecoration(
+                              hintText: 'Enter ${widget.label.toLowerCase()}',
+                            ).copyWith(
+                              helperText: widget.helperText,
+                              suffixIcon:
+                                  widget.fieldType ==
+                                              SettingFieldType.password ||
+                                          widget.fieldType ==
+                                              SettingFieldType.number
+                                      ? IconButton(
+                                        splashRadius: 20,
+                                        icon: Icon(
+                                          _obscureText
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                          size: 20,
+                                          color: AppColors.secondary[500],
+                                        ),
+                                        onPressed: () {
+                                          setState(
+                                            () => _obscureText = !_obscureText,
+                                          );
+                                        },
+                                      )
+                                      : null,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'This field cannot be empty';
+                              }
+                              if (widget.fieldType == SettingFieldType.email &&
+                                  !value.contains('@')) {
+                                return 'Enter a valid email address';
+                              }
+                              if (widget.fieldType == SettingFieldType.number &&
+                                  widget.maxLength != null &&
+                                  value.length != widget.maxLength) {
+                                return 'Must be exactly ${widget.maxLength} digits';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 28),

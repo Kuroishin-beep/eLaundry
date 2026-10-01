@@ -151,7 +151,11 @@ class _StaffSubViewState extends State<StaffSubView> {
     if (updatedStaff == 'deleted') {
       await _employeeController.deleteEmployee(staff.id);
     } else if (updatedStaff is StaffMember) {
-      await _employeeController.updateEmployee(updatedStaff);
+      await _employeeController.updateEmployee(
+        updatedStaff,
+        previousPin: staff.pin,
+        previousEmail: staff.email,
+      );
     }
   }
 

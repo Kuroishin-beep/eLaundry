@@ -117,7 +117,11 @@ class EmployeeController {
     return saved;
   }
 
-  Future<void> updateEmployee(StaffMember employee) async {
+  Future<void> updateEmployee(
+    StaffMember employee, {
+    String? previousPin,
+    String? previousEmail,
+  }) async {
     final roles = await _roles;
     final store = await _store;
     final role =
@@ -125,6 +129,17 @@ class EmployeeController {
     if (role.docs.isEmpty) {
       throw StateError('The selected employee role no longer exists.');
     }
+
+    if (previousPin != null &&
+        previousPin != employee.pin &&
+        previousPin.isNotEmpty) {
+      await _updateAuthPassword(
+        email: (previousEmail ?? employee.email).trim(),
+        previousPin: previousPin,
+        newPin: employee.pin,
+      );
+    }
+
     await store.doc(employee.id).update({
       ...employee.toMap(),
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
@@ -135,6 +150,27 @@ class EmployeeController {
       'record_type': 'employee',
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
     }, SetOptions(merge: true));
+  }
+
+  Future<void> _updateAuthPassword({
+    required String email,
+    required String previousPin,
+    required String newPin,
+  }) async {
+    final secondaryAuth = await _secondaryAuth();
+    try {
+      await secondaryAuth.signInWithEmailAndPassword(
+        email: email,
+        password: previousPin,
+      );
+      await secondaryAuth.currentUser!.updatePassword(newPin);
+    } on FirebaseAuthException catch (error) {
+      throw StateError(
+        'Unable to update the employee login PIN: ${error.message ?? error.code}.',
+      );
+    } finally {
+      await secondaryAuth.signOut();
+    }
   }
 
   Future<void> deleteEmployee(String employeeId) async {

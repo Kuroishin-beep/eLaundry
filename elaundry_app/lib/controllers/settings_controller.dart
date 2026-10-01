@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/employee_models.dart';
 import '../models/store_model.dart';
 import '../models/user_model.dart';
 import '../services/store_context.dart';
@@ -13,6 +14,23 @@ class SettingsController {
 
   Future<StoreContext> getStoreContext() =>
       StoreContextResolver(firestore: _firestore, auth: _auth).resolve();
+
+  Future<String?> getEmployeePin() async {
+    final uid = currentUserId;
+    if (uid == null) return null;
+    final context = await getStoreContext();
+    if (context.isOwner) return null;
+
+    final employee =
+        await _firestore
+            .collection('stores')
+            .doc(context.storeId)
+            .collection('employees')
+            .doc(uid)
+            .get();
+    final pin = employee.data()?['pin'];
+    return pin?.toString().trim();
+  }
 
   /// Fetch user profile from Firestore
   Future<UserModel?> getUserProfile() async {
@@ -30,7 +48,33 @@ class SettingsController {
         createdAt: DateTime.now(),
       );
     }
-    return UserModel.fromMap(doc.data()!, uid);
+    final userModel = UserModel.fromMap(doc.data()!, uid);
+    final context = await getStoreContext();
+    if (context.isOwner) return userModel;
+
+    final employee =
+        await _firestore
+            .collection('stores')
+            .doc(context.storeId)
+            .collection('employees')
+            .doc(uid)
+            .get();
+    final employeeData = employee.data();
+    if (!employee.exists || employeeData == null) return userModel;
+
+    final staff = StaffMember.fromMap(employeeData, uid);
+    return UserModel(
+      id: uid,
+      fullName: staff.name,
+      email: staff.email,
+      phone: staff.contactNumber,
+      profileImage: staff.imageUrl ?? userModel.profileImage,
+      createdAt: userModel.createdAt,
+      storeId: context.storeId,
+      role: staff.role,
+      recordType: 'employee',
+      permissions: context.permissions,
+    );
   }
 
   /// Fetch or initialize store settings for the current user
@@ -113,5 +157,21 @@ class SettingsController {
         .collection('stores')
         .doc((await getStoreContext()).storeId)
         .set(updates, SetOptions(merge: true));
+  }
+
+  Future<void> updateEmployeePin(String pin) async {
+    final uid = currentUserId;
+    if (uid == null) throw StateError('No user logged in.');
+    final context = await getStoreContext();
+    if (context.isOwner) {
+      throw StateError('Owners do not have an employee PIN.');
+    }
+
+    await _firestore
+        .collection('stores')
+        .doc(context.storeId)
+        .collection('employees')
+        .doc(uid)
+        .update({'pin': pin});
   }
 }
