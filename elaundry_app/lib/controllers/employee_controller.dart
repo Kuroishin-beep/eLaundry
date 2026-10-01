@@ -111,6 +111,7 @@ class EmployeeController {
     await _userProfile(uid).set({
       'storeId': await _storeId,
       'role': saved.role,
+      'record_type': 'employee',
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
     }, SetOptions(merge: true));
     return saved;
@@ -131,6 +132,7 @@ class EmployeeController {
     await _userProfile(employee.id).set({
       'storeId': await _storeId,
       'role': employee.role,
+      'record_type': 'employee',
       'role_permissions': role.docs.first.data()['permissions'] ?? {},
     }, SetOptions(merge: true));
   }
@@ -142,6 +144,7 @@ class EmployeeController {
     await _userProfile(employeeId).set({
       'storeId': null,
       'role': null,
+      'record_type': 'employee',
       'role_permissions': const {},
     }, SetOptions(merge: true));
   }

@@ -23,17 +23,21 @@ class OrderController {
   final CatalogController _catalogController;
   final ShiftController _shiftController;
 
-  CollectionReference<Map<String, dynamic>> get _orders =>
-      _firestore.collection('orders');
+  Future<CollectionReference<Map<String, dynamic>>> get _orders async =>
+      _firestore
+          .collection('stores')
+          .doc(await _storeId())
+          .collection('orders');
 
-  CollectionReference<Map<String, dynamic>> get _counters =>
-      _firestore.collection('counters');
+  Future<CollectionReference<Map<String, dynamic>>> get _counters async =>
+      _firestore
+          .collection('stores')
+          .doc(await _storeId())
+          .collection('counters');
 
   Stream<List<LaundryOrder>> watchOrders() async* {
-    final storeId = await _storeId();
-    yield* _orders.where('store_id', isEqualTo: storeId).snapshots().map((
-      snapshot,
-    ) {
+    final orders = await _orders;
+    yield* orders.snapshots().map((snapshot) {
       final orders =
           snapshot.docs
               .map(
@@ -49,8 +53,7 @@ class OrderController {
   }
 
   Future<List<LaundryOrder>> getOrders() async {
-    final snapshot =
-        await _orders.where('store_id', isEqualTo: await _storeId()).get();
+    final snapshot = await (await _orders).get();
     final orders =
         snapshot.docs
             .map(
@@ -71,9 +74,12 @@ class OrderController {
 
   Future<LaundryOrder> createOrder(LaundryOrder order) async {
     final activeShift = await _shiftController.requireActiveShift();
+    final orders = await _orders;
+    final counters = await _counters;
+    final storeId = await _storeId();
     final createdAt = DateTime.now();
     final dateKey = _dateKey(createdAt);
-    final counterReference = _counters.doc('orders-$dateKey');
+    final counterReference = counters.doc('orders-$dateKey');
     late LaundryOrder createdOrder;
 
     await _firestore.runTransaction((transaction) async {
@@ -91,20 +97,15 @@ class OrderController {
         totalDiscount: order.discount,
         totalPrice: (subtotal - order.discount).clamp(0.0, double.infinity),
       );
-      final metadata = OrderMetadata(
-        estimatedEta: createdAt.add(
-          Duration(
-            seconds: order.items.fold<int>(
-              0,
-              (runningTotal, item) =>
-                  runningTotal +
-                  (item.isService ? _durationSeconds(item.duration) : 0),
-            ),
+      final estimatedEta = createdAt.add(
+        Duration(
+          seconds: order.items.fold<int>(
+            0,
+            (runningTotal, item) =>
+                runningTotal +
+                (item.isService ? _durationSeconds(item.duration) : 0),
           ),
         ),
-        fulfillmentStatus: 'pending',
-        modeOfPayment: order.paymentMethod.toLowerCase(),
-        orderId: orderId,
       );
 
       createdOrder = LaundryOrder(
@@ -125,14 +126,17 @@ class OrderController {
             order.qrReferenceId.isNotEmpty
                 ? order.qrReferenceId
                 : 'ELQR-${createdAt.millisecondsSinceEpoch}',
-        discountsApplied: metadata,
+        estimatedEta: estimatedEta,
+        fulfillmentStatus: 'pending',
+        source: order.source,
+        kioskId: order.kioskId,
         orderSummary: summary,
       );
 
       transaction.set(counterReference, {'sequence': sequence});
-      transaction.set(_orders.doc(orderId), {
+      transaction.set(orders.doc(orderId), {
         ...createdOrder.toMap(),
-        'store_id': await _storeId(),
+        'store_id': storeId,
       });
     });
 
@@ -144,13 +148,15 @@ class OrderController {
       throw ArgumentError.value(order.id, 'order.id', 'Order ID is required.');
     }
     final activeShift = await _shiftController.requireActiveShift();
+    final orders = await _orders;
+    final storeId = await _storeId();
     final orderWithBasketAddOns = order.copyWith(
       baskets: _basketsWithAddOns(order),
       shiftId: activeShift.id,
     );
-    await _orders.doc(order.id).set({
+    await orders.doc(order.id).set({
       ...orderWithBasketAddOns.toMap(),
-      'store_id': await _storeId(),
+      'store_id': storeId,
     }, SetOptions(merge: true));
   }
 

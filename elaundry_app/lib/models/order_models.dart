@@ -206,6 +206,10 @@ class LaundryOrder {
   final String orderStatus;
   final String qrReferenceId;
   final String shiftId;
+  final String source;
+  final String? kioskId;
+  final DateTime? estimatedEta;
+  final String fulfillmentStatus;
   final OrderMetadata? discountsApplied;
   final OrderSummary? orderSummary;
 
@@ -224,6 +228,10 @@ class LaundryOrder {
     this.orderStatus = 'unpaid',
     this.qrReferenceId = '',
     this.shiftId = '',
+    this.source = 'counter',
+    this.kioskId,
+    this.estimatedEta,
+    this.fulfillmentStatus = 'pending',
     this.discountsApplied,
     this.orderSummary,
   });
@@ -244,6 +252,14 @@ class LaundryOrder {
         rawMetadata is Map
             ? OrderMetadata.fromMap(Map<String, dynamic>.from(rawMetadata))
             : null;
+    final estimatedEta =
+        _asDateTime(map['estimated_eta']) ?? metadata?.estimatedEta;
+    final fulfillmentStatus =
+        map['fulfillment_status'] as String? ??
+        metadata?.fulfillmentStatus ??
+        'pending';
+    final modeOfPayment =
+        map['mode_of_payment'] as String? ?? metadata?.modeOfPayment ?? 'cash';
     final rawSummary = map['order_summary'];
     final summary =
         rawSummary is Map
@@ -278,9 +294,10 @@ class LaundryOrder {
 
     return LaundryOrder(
       id:
-          metadata?.orderId.isNotEmpty == true
-              ? metadata!.orderId
-              : map['order_ID'] as String? ?? documentId ?? '',
+          map['order_ID'] as String? ??
+          (metadata?.orderId.isNotEmpty == true ? metadata!.orderId : null) ??
+          documentId ??
+          '',
       customerName: map['customer_name'] as String? ?? '',
       contactNumber: map['contact_no'] as String? ?? '',
       dateTime: dateTime,
@@ -307,11 +324,15 @@ class LaundryOrder {
                   .toList()
               : const [],
       discount: summary?.totalDiscount ?? 0,
-      paymentMethod: (metadata?.modeOfPayment ?? 'cash').toUpperCase(),
+      paymentMethod: modeOfPayment.toUpperCase(),
       isPaid: status.toLowerCase() == 'paid',
       orderStatus: status,
       qrReferenceId: map['qr_reference_id'] as String? ?? '',
       shiftId: map['shift_id'] as String? ?? '',
+      source: map['source'] as String? ?? 'counter',
+      kioskId: map['kiosk_id'] as String?,
+      estimatedEta: estimatedEta,
+      fulfillmentStatus: fulfillmentStatus,
       discountsApplied: metadata,
       orderSummary: summary,
     );
@@ -325,20 +346,21 @@ class LaundryOrder {
           totalDiscount: discount,
           totalPrice: total,
         );
-    final metadata =
-        discountsApplied ??
-        OrderMetadata(orderId: id, modeOfPayment: paymentMethod.toLowerCase());
-
     return {
+      'order_ID': id,
       'baskets': baskets.map((basket) => basket.toMap()).toList(),
       'customer_name': customerName,
       'contact_no': contactNumber,
       'date_time': dateTimeValue ?? dateTime,
-      'discounts_applied': metadata.toMap(),
+      'estimated_eta': estimatedEta,
+      'fulfillment_status': fulfillmentStatus,
+      'mode_of_payment': paymentMethod.toLowerCase(),
       'order_details': items.map((item) => item.toMap()).toList(),
       'order_status': isPaid ? 'paid' : orderStatus,
       'order_summary': summary.toMap(),
       'qr_reference_id': qrReferenceId,
+      'source': source,
+      if (kioskId != null && kioskId!.isNotEmpty) 'kiosk_id': kioskId,
       if (shiftId.isNotEmpty) 'shift_id': shiftId,
     };
   }
@@ -351,6 +373,10 @@ class LaundryOrder {
     bool? isPaid,
     String? orderStatus,
     String? shiftId,
+    String? source,
+    String? kioskId,
+    DateTime? estimatedEta,
+    String? fulfillmentStatus,
   }) {
     return LaundryOrder(
       id: id ?? this.id,
@@ -367,6 +393,10 @@ class LaundryOrder {
       orderStatus: orderStatus ?? (isPaid == true ? 'paid' : this.orderStatus),
       qrReferenceId: qrReferenceId,
       shiftId: shiftId ?? this.shiftId,
+      source: source ?? this.source,
+      kioskId: kioskId ?? this.kioskId,
+      estimatedEta: estimatedEta ?? this.estimatedEta,
+      fulfillmentStatus: fulfillmentStatus ?? this.fulfillmentStatus,
       discountsApplied: discountsApplied,
       orderSummary: orderSummary,
     );

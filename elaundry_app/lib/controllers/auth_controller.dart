@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import '../models/auth_model.dart';
-import '../services/store_context.dart';
+import '../models/store_model.dart';
 
 class AuthController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -43,12 +43,9 @@ class AuthController {
     }
 
     if (userModel.storeId == null) {
-      try {
-        final context =
-            await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve();
+      final recordType = docSnapshot.data()?['record_type'] as String?;
+      if (recordType != 'employee' && recordType != 'kiosk') {
+        await _ensureOwnerStore(user, userModel);
         userModel = UserModel(
           id: userModel.id,
           fullName: userModel.fullName,
@@ -56,12 +53,11 @@ class AuthController {
           phone: userModel.phone,
           profileImage: userModel.profileImage,
           createdAt: userModel.createdAt,
-          storeId: context.storeId,
-          role: context.role,
-          permissions: context.permissions,
+          storeId: user.uid,
+          role: userModel.role ?? 'Owner',
+          recordType: 'owner',
+          permissions: userModel.permissions,
         );
-      } on StateError {
-        // New owner accounts do not have a store document until first setup.
       }
     }
 
@@ -104,6 +100,7 @@ class AuthController {
         phone: phone,
         profileImage: null,
         createdAt: DateTime.now(),
+        recordType: 'owner',
       );
 
       await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
@@ -183,6 +180,7 @@ class AuthController {
           phone: user.phoneNumber,
           profileImage: user.photoURL,
           createdAt: DateTime.now(),
+          recordType: 'owner',
         );
         await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
       }
@@ -198,6 +196,19 @@ class AuthController {
   /// Sign Out
   Future<void> signOut() async {
     await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+  }
+
+  Future<void> _ensureOwnerStore(User user, UserModel profile) async {
+    final storeReference = _firestore.collection('stores').doc(user.uid);
+    final storeSnapshot = await storeReference.get();
+    if (!storeSnapshot.exists) {
+      await storeReference.set(StoreModel(id: user.uid).toMap());
+    }
+    await _firestore.collection('users').doc(user.uid).set({
+      'storeId': user.uid,
+      'role': profile.role ?? 'Owner',
+      'record_type': 'owner',
+    }, SetOptions(merge: true));
   }
 
   String _handleAuthException(FirebaseAuthException e) {

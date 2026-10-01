@@ -9,6 +9,7 @@ class UserModel {
   final DateTime? createdAt;
   final String? storeId;
   final String? role;
+  final String? recordType;
   final RolePermissions permissions;
 
   UserModel({
@@ -20,6 +21,7 @@ class UserModel {
     this.createdAt,
     this.storeId,
     this.role,
+    this.recordType,
     this.permissions = const RolePermissions(),
   });
 
@@ -33,6 +35,7 @@ class UserModel {
       'createdAt': createdAt?.toIso8601String(),
       'storeId': storeId,
       'role': role,
+      'record_type': recordType,
       'role_permissions': permissions.toMap(),
     };
   }
@@ -48,6 +51,7 @@ class UserModel {
           map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
       storeId: map['storeId'] as String?,
       role: map['role'] as String?,
+      recordType: map['record_type'] as String?,
       permissions: RolePermissions.fromMap(
         map['role_permissions'] as Map<String, dynamic>?,
       ),

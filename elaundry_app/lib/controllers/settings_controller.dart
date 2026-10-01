@@ -11,6 +11,9 @@ class SettingsController {
   String? get currentUserId => _auth.currentUser?.uid;
   User? get currentUser => _auth.currentUser;
 
+  Future<StoreContext> getStoreContext() =>
+      StoreContextResolver(firestore: _firestore, auth: _auth).resolve();
+
   /// Fetch user profile from Firestore
   Future<UserModel?> getUserProfile() async {
     final uid = currentUserId;
@@ -35,12 +38,7 @@ class SettingsController {
     final uid = currentUserId;
     if (uid == null) throw Exception('No user logged in.');
 
-    final storeId =
-        (await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve())
-            .storeId;
+    final storeId = (await getStoreContext()).storeId;
     final doc = await _firestore.collection('stores').doc(storeId).get();
     if (!doc.exists || doc.data() == null) {
       final initialStore = StoreModel(
@@ -113,13 +111,7 @@ class SettingsController {
 
     await _firestore
         .collection('stores')
-        .doc(
-          (await StoreContextResolver(
-                firestore: _firestore,
-                auth: _auth,
-              ).resolve())
-              .storeId,
-        )
+        .doc((await getStoreContext()).storeId)
         .set(updates, SetOptions(merge: true));
   }
 }

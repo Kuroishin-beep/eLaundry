@@ -144,65 +144,16 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ImageUploadField(
-                      folder: 'entities',
-                      initialUrl: _imageUrl,
-                      onChanged: (value) => _imageUrl = value,
-                    ),
-                    const SizedBox(height: 12),
                     // --- 1. BASIC INFORMATION ---
                     StaffSectionCard(
                       stepNumber: '1',
                       title: 'BASIC INFORMATION',
                       children: [
                         // Image Upload Area
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.neutral[500]!),
-                          ),
-                          child: Column(
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: BorderSide(
-                                    color: AppColors.neutral[600]!,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.file_upload_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'Upload Image',
-                                  style: TextStyle(color: Color(0xFF2B2D2C)),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Choose an image',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.secondary[600],
-                                ),
-                              ),
-                              Text(
-                                'JPG, JPEG, PNG, WEBP',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.secondary[400],
-                                ),
-                              ),
-                            ],
-                          ),
+                        ImageUploadField(
+                          folder: 'entities',
+                          initialUrl: _imageUrl,
+                          onChanged: (value) => _imageUrl = value,
                         ),
                         const SizedBox(height: 14),
 

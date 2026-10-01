@@ -29,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _storeName = '';
   String _address = '';
   String _pin = '';
+  bool _isStoreOwner = false;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettingsData() async {
     try {
       final user = await _settingsController.getUserProfile();
+      final storeContext = await _settingsController.getStoreContext();
       final store = await _settingsController.getStoreSettings();
 
       if (mounted) {
@@ -51,6 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _address = store.address;
           _pin = store.pin;
           _notificationsEnabled = store.notificationsEnabled;
+          _isStoreOwner = storeContext.isOwner;
           _isLoading = false;
         });
       }
@@ -323,15 +326,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: CupertinoSwitch(
                                   value: _notificationsEnabled,
                                   activeTrackColor: AppColors.success,
-                                  onChanged: (value) async {
-                                    setState(
-                                      () => _notificationsEnabled = value,
-                                    );
-                                    await _settingsController
-                                        .updateStoreSettings(
-                                          notificationsEnabled: value,
-                                        );
-                                  },
+                                  onChanged:
+                                      _isStoreOwner
+                                          ? (value) async {
+                                            setState(
+                                              () =>
+                                                  _notificationsEnabled = value,
+                                            );
+                                            await _settingsController
+                                                .updateStoreSettings(
+                                                  notificationsEnabled: value,
+                                                );
+                                          }
+                                          : null,
                                 ),
                               ),
                             ),
@@ -356,17 +363,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               onTap:
-                                  () => _openEditor(
-                                    title: 'Store Name',
-                                    label: 'Store / Branch Name',
-                                    currentValue: _storeName,
-                                    fieldType: SettingFieldType.text,
-                                    onSave: (val) async {
-                                      await _settingsController
-                                          .updateStoreSettings(storeName: val);
-                                      setState(() => _storeName = val);
-                                    },
-                                  ),
+                                  _isStoreOwner
+                                      ? () => _openEditor(
+                                        title: 'Store Name',
+                                        label: 'Store / Branch Name',
+                                        currentValue: _storeName,
+                                        fieldType: SettingFieldType.text,
+                                        onSave: (val) async {
+                                          await _settingsController
+                                              .updateStoreSettings(
+                                                storeName: val,
+                                              );
+                                          setState(() => _storeName = val);
+                                        },
+                                      )
+                                      : null,
                             ),
                             const _CardDivider(),
                             _SettingsTile(
@@ -386,17 +397,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               onTap:
-                                  () => _openEditor(
-                                    title: 'Store Address',
-                                    label: 'Physical Address',
-                                    currentValue: _address,
-                                    fieldType: SettingFieldType.multiline,
-                                    onSave: (val) async {
-                                      await _settingsController
-                                          .updateStoreSettings(address: val);
-                                      setState(() => _address = val);
-                                    },
-                                  ),
+                                  _isStoreOwner
+                                      ? () => _openEditor(
+                                        title: 'Store Address',
+                                        label: 'Physical Address',
+                                        currentValue: _address,
+                                        fieldType: SettingFieldType.multiline,
+                                        onSave: (val) async {
+                                          await _settingsController
+                                              .updateStoreSettings(
+                                                address: val,
+                                              );
+                                          setState(() => _address = val);
+                                        },
+                                      )
+                                      : null,
                             ),
                           ],
                         ),
@@ -419,20 +434,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               onTap:
-                                  () => _openEditor(
-                                    title: 'Security PIN',
-                                    label: '4-Digit PIN',
-                                    currentValue: _pin,
-                                    fieldType: SettingFieldType.number,
-                                    maxLength: 4,
-                                    helperText:
-                                        'Only digits allowed (Numpad input)',
-                                    onSave: (val) async {
-                                      await _settingsController
-                                          .updateStoreSettings(pin: val);
-                                      setState(() => _pin = val);
-                                    },
-                                  ),
+                                  _isStoreOwner
+                                      ? () => _openEditor(
+                                        title: 'Security PIN',
+                                        label: '4-Digit PIN',
+                                        currentValue: _pin,
+                                        fieldType: SettingFieldType.number,
+                                        maxLength: 4,
+                                        helperText:
+                                            'Only digits allowed (Numpad input)',
+                                        onSave: (val) async {
+                                          await _settingsController
+                                              .updateStoreSettings(pin: val);
+                                          setState(() => _pin = val);
+                                        },
+                                      )
+                                      : null,
                             ),
                             const _CardDivider(),
                             _SettingsTile(

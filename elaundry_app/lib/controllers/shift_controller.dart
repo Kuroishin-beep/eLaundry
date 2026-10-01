@@ -30,54 +30,53 @@ class ShiftController {
       (await StoreContextResolver(firestore: _firestore, auth: _auth).resolve())
           .storeId;
 
-  CollectionReference<Map<String, dynamic>> get _orders =>
-      _firestore.collection('orders');
+  Future<CollectionReference<Map<String, dynamic>>> get _orders async =>
+      _firestore
+          .collection('stores')
+          .doc(await _storeId())
+          .collection('orders');
 
-  CollectionReference<Map<String, dynamic>> get _counters =>
-      _firestore.collection('counters');
+  Future<CollectionReference<Map<String, dynamic>>> get _counters async =>
+      _firestore
+          .collection('stores')
+          .doc(await _storeId())
+          .collection('counters');
 
   Stream<List<ShiftModel>> watchShifts() async* {
     final shifts = await _shifts;
-    yield* shifts
-        .where('opened_by_user_id', isEqualTo: _userId)
-        .snapshots()
-        .map((snapshot) {
-          final result =
-              snapshot.docs
-                  .map(
-                    (document) =>
-                        ShiftModel.fromMap(document.data(), id: document.id),
-                  )
-                  .toList()
-                ..sort((left, right) {
-                  final leftDate = left.openedAt;
-                  final rightDate = right.openedAt;
-                  if (leftDate == null || rightDate == null) return 0;
-                  return rightDate.compareTo(leftDate);
-                });
-          return result;
-        });
+    yield* shifts.snapshots().map((snapshot) {
+      final result =
+          snapshot.docs
+              .map(
+                (document) =>
+                    ShiftModel.fromMap(document.data(), id: document.id),
+              )
+              .toList()
+            ..sort((left, right) {
+              final leftDate = left.openedAt;
+              final rightDate = right.openedAt;
+              if (leftDate == null || rightDate == null) return 0;
+              return rightDate.compareTo(leftDate);
+            });
+      return result;
+    });
   }
 
   Stream<ShiftModel?> watchActiveShift() async* {
     final shifts = await _shifts;
-    yield* shifts
-        .where('opened_by_user_id', isEqualTo: _userId)
-        .snapshots()
-        .map((snapshot) {
-          final activeDocuments = snapshot.docs.where(
-            (document) => document.data()['is_closed'] != true,
-          );
-          if (activeDocuments.isEmpty) return null;
-          final document = activeDocuments.first;
-          return ShiftModel.fromMap(document.data(), id: document.id);
-        });
+    yield* shifts.snapshots().map((snapshot) {
+      final activeDocuments = snapshot.docs.where(
+        (document) => document.data()['is_closed'] != true,
+      );
+      if (activeDocuments.isEmpty) return null;
+      final document = activeDocuments.first;
+      return ShiftModel.fromMap(document.data(), id: document.id);
+    });
   }
 
   Future<ShiftModel?> getActiveShift() async {
     final shifts = await _shifts;
-    final snapshot =
-        await shifts.where('opened_by_user_id', isEqualTo: _userId).get();
+    final snapshot = await shifts.get();
     final activeDocuments = snapshot.docs.where(
       (document) => document.data()['is_closed'] != true,
     );
@@ -105,17 +104,16 @@ class ShiftController {
 
     final userId = _userId;
     final shifts = await _shifts;
-    final activeShift =
-        await shifts.where('opened_by_user_id', isEqualTo: userId).get();
+    final activeShift = await shifts.get();
     if (activeShift.docs.any(
       (document) => document.data()['is_closed'] != true,
     )) {
-      throw StateError('A shift is already open for this user.');
+      throw StateError('A shift is already open for this store.');
     }
 
     final openedAt = DateTime.now();
     final dateKey = _dateKey(openedAt);
-    final counterReference = _counters.doc('shifts-$dateKey');
+    final counterReference = (await _counters).doc('shifts-$dateKey');
     late ShiftModel shift;
     await _firestore.runTransaction((transaction) async {
       final counterSnapshot = await transaction.get(counterReference);
@@ -139,9 +137,7 @@ class ShiftController {
   }
 
   Stream<ShiftModel> watchShiftSales(ShiftModel shift) async* {
-    final storeId = await _storeId();
-    yield* _orders
-        .where('store_id', isEqualTo: storeId)
+    yield* (await _orders)
         .where('shift_id', isEqualTo: shift.id)
         .snapshots()
         .map(
@@ -162,10 +158,7 @@ class ShiftController {
     }
 
     final shiftOrders =
-        await _orders
-            .where('store_id', isEqualTo: await _storeId())
-            .where('shift_id', isEqualTo: shift.id)
-            .get();
+        await (await _orders).where('shift_id', isEqualTo: shift.id).get();
     final paidOrders =
         shiftOrders.docs
             .where((document) => document.data()['order_status'] == 'paid')
@@ -203,9 +196,12 @@ class ShiftController {
     for (final order in orders) {
       final data = order.data();
       final summary = _map(data['order_summary']);
-      final paymentMetadata = _map(data['discounts_applied']);
+      final legacyMetadata = _map(data['discounts_applied']);
       final paymentMethod =
-          (paymentMetadata['mode_of_payment'] ?? data['payment_method'] ?? '')
+          (data['mode_of_payment'] ??
+                  legacyMetadata['mode_of_payment'] ??
+                  data['payment_method'] ??
+                  '')
               .toString()
               .trim()
               .toLowerCase();

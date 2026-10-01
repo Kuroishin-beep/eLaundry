@@ -26,19 +26,20 @@ class ReportController {
           )
           .collection('reports');
 
-  CollectionReference<Map<String, dynamic>> get _orders =>
-      _firestore.collection('orders');
+  Future<CollectionReference<Map<String, dynamic>>> get _orders async =>
+      _firestore
+          .collection('stores')
+          .doc(
+            (await StoreContextResolver(
+                  firestore: _firestore,
+                  auth: _auth,
+                ).resolve())
+                .storeId,
+          )
+          .collection('orders');
 
   Stream<ReportSummary> watchReport(String timeframe) async* {
-    final storeId =
-        (await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve())
-            .storeId;
-    yield* _orders.where('store_id', isEqualTo: storeId).snapshots().asyncMap((
-      snapshot,
-    ) async {
+    yield* (await _orders).snapshots().asyncMap((snapshot) async {
       final report = _calculate(timeframe, snapshot.docs);
       await (await _reports).doc(timeframe).set(report.toMap());
       return report;
@@ -46,13 +47,7 @@ class ReportController {
   }
 
   Future<ReportSummary> getReport(String timeframe) async {
-    final storeId =
-        (await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve())
-            .storeId;
-    final snapshot = await _orders.where('store_id', isEqualTo: storeId).get();
+    final snapshot = await (await _orders).get();
     final report = _calculate(timeframe, snapshot.docs);
     await (await _reports).doc(timeframe).set(report.toMap());
     return report;
@@ -84,9 +79,11 @@ class ReportController {
       final summary = _map(data['order_summary']);
       grossSales += _asDouble(summary['subtotal']);
       netSales += _asDouble(summary['total_price']);
-      final metadata = _map(data['discounts_applied']);
+      final legacyMetadata = _map(data['discounts_applied']);
       final paymentMethod =
-          (metadata['mode_of_payment'] ?? '').toString().toLowerCase();
+          (data['mode_of_payment'] ?? legacyMetadata['mode_of_payment'] ?? '')
+              .toString()
+              .toLowerCase();
       if (paymentMethod == 'cash') cashOrders++;
 
       final details = data['order_details'];

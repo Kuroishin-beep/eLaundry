@@ -19,18 +19,20 @@ class TransactionController {
   final FirebaseAuth _auth;
   final ShiftController _shiftController;
 
-  CollectionReference<Map<String, dynamic>> get _orders =>
-      _firestore.collection('orders');
+  Future<CollectionReference<Map<String, dynamic>>> get _orders async =>
+      _firestore
+          .collection('stores')
+          .doc(
+            (await StoreContextResolver(
+                  firestore: _firestore,
+                  auth: _auth,
+                ).resolve())
+                .storeId,
+          )
+          .collection('orders');
 
   Stream<List<TransactionModel>> watchTransactions() async* {
-    final storeId =
-        (await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve())
-            .storeId;
-    yield* _orders
-        .where('store_id', isEqualTo: storeId)
+    yield* (await _orders)
         .where('order_status', isEqualTo: 'paid')
         .snapshots()
         .map((snapshot) {
@@ -46,17 +48,8 @@ class TransactionController {
   }
 
   Future<List<TransactionModel>> getTransactions() async {
-    final storeId =
-        (await StoreContextResolver(
-              firestore: _firestore,
-              auth: _auth,
-            ).resolve())
-            .storeId;
     final snapshot =
-        await _orders
-            .where('store_id', isEqualTo: storeId)
-            .where('order_status', isEqualTo: 'paid')
-            .get();
+        await (await _orders).where('order_status', isEqualTo: 'paid').get();
     return snapshot.docs.map(_fromOrderDocument).toList();
   }
 
@@ -82,10 +75,10 @@ class TransactionController {
         _nonEmptyString(claims['role']) ??
         'Staff';
 
-    await _orders.doc(order.id).update({
+    await (await _orders).doc(order.id).update({
       'order_status': 'paid',
       'shift_id': activeShift.id,
-      'discounts_applied.mode_of_payment': order.paymentMethod.toLowerCase(),
+      'mode_of_payment': order.paymentMethod.toLowerCase(),
       'processed_by_user_id': user.uid,
       'processed_by_name': processorName,
       'processed_by_role': processorRole,
@@ -99,7 +92,7 @@ class TransactionController {
     }
 
     final activeShift = await _shiftController.requireActiveShift();
-    await _orders.doc(orderId).update({
+    await (await _orders).doc(orderId).update({
       'order_status': 'unpaid',
       'shift_id': activeShift.id,
       'processed_by_user_id': FieldValue.delete(),
