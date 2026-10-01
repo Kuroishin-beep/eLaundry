@@ -134,7 +134,12 @@ class _IconPickerFieldState extends State<IconPickerField> {
         showSearchBar: true,
         title: const Text('Choose an icon'),
         searchHintText: 'Search icons',
-        iconPackModes: const [IconPack.allMaterial, IconPack.fontAwesomeIcons],
+        iconPackModes: const [
+          IconPack.allMaterial,
+          IconPack.fontAwesomeIcons,
+          IconPack.cupertino,
+          IconPack.lineAwesomeIcons,
+        ],
         iconPickerShape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
