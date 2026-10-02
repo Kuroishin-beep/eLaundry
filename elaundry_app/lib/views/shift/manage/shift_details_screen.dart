@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../controllers/shift_controller.dart';
 import '../../../core/themes/theme.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/shift_model.dart';
 
 class ShiftDetailsScreen extends StatelessWidget {
@@ -123,16 +124,9 @@ class ShiftDetailsScreen extends StatelessWidget {
       if (context.mounted) Navigator.of(context).pop(closedShift);
     } catch (error) {
       if (!context.mounted) return;
-      final message = error.toString().replaceFirst(
-        RegExp(r'^(Bad state|Exception):\s*'),
-        '',
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Unable to close shift: $message'),
-        ),
+      AppSnackBar.showError(
+        context,
+        'We could not close the shift. Please try again.',
       );
     }
   }

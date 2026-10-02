@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/order_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/order_models.dart';
 import '../../shared/input_decoration.dart';
 import '../../shared/search_filter_bar.dart';
@@ -106,12 +107,9 @@ class _AddToCartScreenState extends State<AddToCartScreen> {
     _syncBasketWeights();
     final selectedItems = _availableItems.where((i) => i.quantity > 0).toList();
     if (selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Please select at least one service or add-on.'),
-        ),
+      AppSnackBar.showWarning(
+        context,
+        'Please select at least one service or add-on.',
       );
       return;
     }

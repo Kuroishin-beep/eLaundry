@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/themes/theme.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/employee_models.dart';
 import '../../../shared/field_label.dart';
 import '../../../shared/input_decoration.dart';
@@ -89,17 +90,11 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
         imageUrl: _imageUrl,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text(
-            _isEditing
-                ? 'Staff details updated!'
-                : 'Staff created successfully!',
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        _isEditing
+            ? 'Staff details updated successfully.'
+            : 'Staff member created successfully.',
       );
 
       Navigator.of(context).pop(updatedOrNew);

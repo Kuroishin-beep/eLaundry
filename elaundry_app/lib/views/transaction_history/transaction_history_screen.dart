@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/transaction_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/transaction_model.dart';
 import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
@@ -73,21 +74,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     try {
       await _transactionController.markOrderUnpaid(tx.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Order marked as unpaid.'),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Order marked as unpaid.');
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Unable to mark order as unpaid: $error'),
-        ),
+      AppSnackBar.showError(
+        context,
+        'We could not mark the order as unpaid. Please try again.',
       );
     }
   }

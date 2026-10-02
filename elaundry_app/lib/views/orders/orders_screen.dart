@@ -6,6 +6,7 @@ import '../../controllers/order_controller.dart';
 import '../../controllers/shift_controller.dart';
 import '../../controllers/transaction_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/order_models.dart';
 import '../../models/shift_model.dart';
 import '../../shared/empty_states.dart';
@@ -97,12 +98,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
       await _shiftController.openShift(startingCash);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Unable to open shift: $error'),
-        ),
+      AppSnackBar.showError(
+        context,
+        'We could not open the shift. Please try again.',
       );
     }
   }
@@ -117,12 +115,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (newOrder != null) await _orderController.createOrder(newOrder);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-            content: Text('Unable to create order: $error'),
-          ),
+        AppSnackBar.showError(
+          context,
+          'We could not create the order. Please try again.',
         );
       }
     }
@@ -130,12 +125,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   void _onOrderTap(LaundryOrder order) async {
     if (_activeShift == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Open a shift before processing an order.'),
-        ),
+      AppSnackBar.showWarning(
+        context,
+        'Please open a shift before processing an order.',
       );
       return;
     }
@@ -153,12 +145,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-            content: Text('Unable to update order: $error'),
-          ),
+        AppSnackBar.showError(
+          context,
+          'We could not update the order. Please try again.',
         );
       }
     }

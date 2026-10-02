@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/machine_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/catalog_models.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../../shared/search_filter_bar.dart';
@@ -183,12 +184,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   void _showError(Object error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-        content: Text('Catalog update failed: $error'),
-      ),
+    AppSnackBar.showError(
+      context,
+      'We could not update the catalog. Please try again.',
     );
   }
 

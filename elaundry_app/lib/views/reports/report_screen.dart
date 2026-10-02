@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../controllers/report_controller.dart';
 import '../../models/report_model.dart';
 import '../../shared/laundry_navigation_fab.dart';
@@ -72,12 +73,9 @@ class _ReportScreenState extends State<ReportScreen> {
           },
           onError: (Object error, StackTrace stackTrace) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-                  content: Text('Unable to load report: $error'),
-                ),
+              AppSnackBar.showError(
+                context,
+                'We could not load the report. Please try again.',
               );
             }
           },

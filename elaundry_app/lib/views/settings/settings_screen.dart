@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import '../auth/login_screen.dart';
 import 'edit_settings_screen.dart';
@@ -70,25 +71,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-      ),
-    );
+    AppSnackBar.showError(context, message);
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-      ),
-    );
+    AppSnackBar.showSuccess(context, message);
   }
 
   String _formatTruncated(String text, int maxLength) {

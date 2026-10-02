@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/themes/theme.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../controllers/employee_controller.dart';
 import '../../../models/employee_models.dart';
 import '../../../shared/empty_states.dart';
@@ -85,12 +86,9 @@ class _StaffSubViewState extends State<StaffSubView> {
         await _employeeController.createEmployee(newStaff);
       } catch (error) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-              content: Text('Unable to create staff: $error'),
-            ),
+          AppSnackBar.showError(
+            context,
+            'We could not create the staff member. Please try again.',
           );
         }
       }

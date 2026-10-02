@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/order_models.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -125,12 +126,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _markAsPaid() {
     final paidAmt = double.tryParse(_amountStr) ?? 0.0;
     if (paidAmt < widget.order.total) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Payment amount is less than total bill!'),
-        ),
+      AppSnackBar.showWarning(
+        context,
+        'Please enter an amount that covers the total bill.',
       );
       return;
     }

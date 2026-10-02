@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/shift_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/shift_model.dart';
 import '../../shared/laundry_navigation_fab.dart';
 import './manage/manage_shift_subview.dart';
@@ -38,12 +39,9 @@ class _ShiftScreenState extends State<ShiftScreen> {
       if (mounted) _openShiftDetails(newShift);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text('Unable to open shift: $error'),
-        ),
+      AppSnackBar.showError(
+        context,
+        'We could not open the shift. Please try again.',
       );
     }
   }

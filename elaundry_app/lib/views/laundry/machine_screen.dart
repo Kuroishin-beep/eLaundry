@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/machine_controller.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../models/machine_model.dart';
 import '../../shared/empty_states.dart';
 import '../../shared/laundry_navigation_fab.dart';
@@ -47,17 +48,20 @@ class _MachinesScreenState extends State<MachinesScreen> {
       if (result == 'deleted') {
         await _machineController.deleteMachine(machine.id);
         if (mounted) {
-          _showMachineSnackBar('Machine deleted.');
+          AppSnackBar.showSuccess(context, 'Machine deleted successfully.');
         }
       } else if (result is MachineItem) {
         await _machineController.updateMachine(result);
         if (mounted) {
-          _showMachineSnackBar('Machine updated.');
+          AppSnackBar.showSuccess(context, 'Machine updated successfully.');
         }
       }
     } catch (error) {
       if (mounted) {
-        _showMachineSnackBar('Unable to update machine: $error');
+        AppSnackBar.showError(
+          context,
+          'We could not update the machine. Please try again.',
+        );
       }
     }
   }
@@ -146,29 +150,17 @@ class _MachinesScreenState extends State<MachinesScreen> {
       if (newMachine != null) {
         await _machineController.createMachine(newMachine);
         if (mounted) {
-          _showMachineSnackBar(
-            'Machine successfully created!',
-            backgroundColor: AppColors.primary[500],
-          );
+          AppSnackBar.showSuccess(context, 'Machine created successfully.');
         }
       }
     } catch (error) {
       if (mounted) {
-        _showMachineSnackBar('Unable to save machine: $error');
+        AppSnackBar.showError(
+          context,
+          'We could not save the machine. Please try again.',
+        );
       }
     }
-  }
-
-  void _showMachineSnackBar(String message, {Color? backgroundColor}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-        backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/themes/theme.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../shared/input_decoration.dart';
 
 enum SettingFieldType { text, email, password, number, multiline }
@@ -58,14 +59,9 @@ class _EditSettingsScreenState extends State<EditSettingsScreen> {
   void _save() {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          content: Text('${widget.title} updated successfully!'),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        '${widget.title} updated successfully.',
       );
       Navigator.of(context).pop(_controller.text);
     }

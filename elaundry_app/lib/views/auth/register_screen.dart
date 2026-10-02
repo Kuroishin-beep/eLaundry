@@ -3,6 +3,7 @@ import 'package:elaundry_app/shared/custom_icons.dart';
 import 'package:elaundry_app/shared/custom_widgets.dart';
 import 'package:elaundry_app/shared/input_decoration.dart';
 import '../../controllers/auth_controller.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../core/themes/theme.dart';
 import 'login_screen.dart';
 import '../settings/settings_screen.dart';
@@ -65,19 +66,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           Navigator.of(context).popUntil((route) => route.isFirst);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.primary[700],
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              content: const Text(
-                'Account created successfully! Please sign in.',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+          AppSnackBar.showSuccess(
+            context,
+            'Your account was created successfully. Please sign in.',
           );
         }
       } catch (error) {
@@ -85,19 +76,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           Navigator.of(context).pop();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              content: Text(
-                error.toString().replaceAll('Exception: ', ''),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
+          AppSnackBar.showError(
+            context,
+            'We could not create your account. Please check your details and try again.',
           );
         }
       }
@@ -137,19 +118,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.of(context).pop();
 
         if (!error.toString().toLowerCase().contains('cancel')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              content: Text(
-                error.toString().replaceAll('Exception: ', ''),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
+          AppSnackBar.showError(
+            context,
+            'We could not create your account with Google. Please try again.',
           );
         }
       }

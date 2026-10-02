@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/theme.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/employee_models.dart';
 import '../../../shared/input_decoration.dart';
 import '../../../shared/field_label.dart';
@@ -59,15 +60,9 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
         permissions: _permissions,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary[700],
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 15),
-          content: Text(
-            _isEditing ? 'Role updated!' : 'Role created successfully!',
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        _isEditing ? 'Role updated successfully.' : 'Role created successfully.',
       );
       Navigator.of(context).pop(role);
     }
