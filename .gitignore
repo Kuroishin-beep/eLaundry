@@ -65,4 +65,5 @@ android/**/GeneratedPluginRegistrant.java
 *service-account*.json
 
 
-# google-services.json
+# firebase
+**/firestore.rules
