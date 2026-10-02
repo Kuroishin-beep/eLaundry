@@ -163,11 +163,7 @@ class _RoleSubViewState extends State<RoleSubView> {
                         border: Border.all(color: AppColors.neutral[500]!),
                       ),
                       alignment: Alignment.center,
-                      child: Icon(
-                        iconForName(role.iconName),
-                        color: AppColors.accent,
-                        size: 24,
-                      ),
+                      child: _RoleMediaPreview(role: role),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -203,6 +199,39 @@ class _RoleSubViewState extends State<RoleSubView> {
           },
         ),
       ],
+    );
+  }
+}
+
+class _RoleMediaPreview extends StatelessWidget {
+  final RoleItem role;
+
+  const _RoleMediaPreview({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = role.imageUrl?.trim();
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return _fallbackIcon();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackIcon(),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Icon(
+      iconForName(role.iconName),
+      color: AppColors.accent,
+      size: 24,
     );
   }
 }

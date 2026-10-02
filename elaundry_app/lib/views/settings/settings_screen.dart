@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../core/themes/theme.dart';
@@ -94,14 +97,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
-                  _uploadProfileImage();
+                  _uploadProfileImage(ImageSource.camera);
                 },
                 child: const Text('Take Photo'),
               ),
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
-                  _uploadProfileImage();
+                  _uploadProfileImage(ImageSource.gallery);
                 },
                 child: const Text('Choose from Gallery'),
               ),
@@ -124,15 +127,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _uploadProfileImage() async {
-    final url = await MediaService().pickAndUpload(folder: 'profiles');
-    if (url == null || !mounted) return;
+  Future<void> _uploadProfileImage(ImageSource source) async {
     try {
+      final url = await MediaService().pickAndUpload(
+        folder: 'profiles',
+        source: source,
+      );
+      if (url == null || !mounted) return;
       await _settingsController.updateProfileImage(url);
       setState(() => _profileImagePath = url);
-      _showSuccessSnackBar('Profile picture updated successfully');
-    } catch (e) {
-      _showErrorSnackBar('Failed to update profile picture: $e');
+      _showSuccessSnackBar('Profile picture updated successfully.');
+    } on FirebaseException {
+      if (mounted) {
+        _showErrorSnackBar(
+          'We could not upload your profile picture. Please check your connection and try again.',
+        );
+      }
+    } on TimeoutException {
+      if (mounted) {
+        _showErrorSnackBar(
+          'The image upload took too long. Please check your connection and try again.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        _showErrorSnackBar(
+          'We could not update your profile picture. Please try again.',
+        );
+      }
     }
   }
 

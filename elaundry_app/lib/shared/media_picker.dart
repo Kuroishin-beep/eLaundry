@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:flutter_iconpicker/Models/configuration.dart';
+import 'package:image_picker/image_picker.dart';
+import '../core/widgets/app_snackbar.dart';
 import '../services/media_service.dart';
 
 IconData iconForName(String name) {
@@ -53,10 +57,34 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
   Future<void> _pick() async {
     setState(() => _busy = true);
     try {
-      final url = await MediaService().pickAndUpload(folder: widget.folder);
+      final url = await MediaService().pickAndUpload(
+        folder: widget.folder,
+        source: ImageSource.gallery,
+      );
       if (url != null && mounted) {
         setState(() => _url = url);
         widget.onChanged(url);
+      }
+    } on FirebaseException {
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          'We could not upload the image. Please check your connection and try again.',
+        );
+      }
+    } on TimeoutException {
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          'The image upload took too long. Please check your connection and try again.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          'We could not select the image. Please try another file.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);

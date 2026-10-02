@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -19,13 +20,16 @@ class MediaService {
     final file = await _picker.pickImage(source: source, imageQuality: 85);
     if (file == null) return null;
     final bytes = await file.readAsBytes();
-    final name = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+    final safeName = file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final name = '${DateTime.now().millisecondsSinceEpoch}_$safeName';
     final reference = _storage.ref('$folder/$name');
-    await reference.putData(
-      Uint8List.fromList(bytes),
-      SettableMetadata(contentType: _contentType(file.name)),
-    );
-    return reference.getDownloadURL();
+    await reference
+        .putData(
+          Uint8List.fromList(bytes),
+          SettableMetadata(contentType: _contentType(file.name)),
+        )
+        .timeout(const Duration(seconds: 30));
+    return reference.getDownloadURL().timeout(const Duration(seconds: 15));
   }
 
   String _contentType(String name) {

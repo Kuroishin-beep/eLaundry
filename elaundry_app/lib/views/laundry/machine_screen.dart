@@ -60,7 +60,7 @@ class _MachinesScreenState extends State<MachinesScreen> {
       if (mounted) {
         AppSnackBar.showError(
           context,
-          'We could not update the machine. Please try again.',
+          'We could not complete that machine action. Please try again.',
         );
       }
     }

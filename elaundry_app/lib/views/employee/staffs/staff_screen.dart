@@ -60,7 +60,10 @@ class _StaffSubViewState extends State<StaffSubView> {
 
   Future<void> _showFilterSheet() async {
     final roles =
-        _roles.map((role) => role.name).where((name) => name.isNotEmpty).toSet()
+        _roles
+            .map((role) => role.name)
+            .where((name) => name.isNotEmpty)
+            .toSet()
             .toList();
     final selection = await showStaffFilterDialog(
       context,
@@ -247,17 +250,10 @@ class _StaffSubViewState extends State<StaffSubView> {
                   ),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor: const Color(0xFF2C2D2D),
-                        child: Text(
-                          _getInitials(member.name),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                      _StaffAvatar(
+                        name: member.name,
+                        imageUrl: member.imageUrl,
+                        getInitials: _getInitials,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -332,6 +328,52 @@ class _StaffSubViewState extends State<StaffSubView> {
             },
           ),
       ],
+    );
+  }
+}
+
+class _StaffAvatar extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+  final String Function(String) getInitials;
+
+  const _StaffAvatar({
+    required this.name,
+    required this.imageUrl,
+    required this.getInitials,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl?.trim();
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: const Color(0xFF2C2D2D),
+      child: ClipOval(
+        child:
+            url == null || url.isEmpty
+                ? _fallback()
+                : Image.network(
+                  url,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _fallback(),
+                ),
+      ),
+    );
+  }
+
+  Widget _fallback() {
+    return Center(
+      child: Text(
+        getInitials(name),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
